@@ -22,7 +22,7 @@ def collate(batch, samples_per_gpu=1):
     """
 
     if not isinstance(batch, collections.Sequence):
-        raise TypeError("{} is not supported.".format(batch.dtype))
+        raise TypeError(f"{batch.dtype} is not supported.")
 
     if isinstance(batch[0], DataContainer):
         assert len(batch) % samples_per_gpu == 0
@@ -46,7 +46,7 @@ def collate(batch, samples_per_gpu=1):
                     for dim in range(1, batch[i].pad_dims + 1):
                         max_shape[dim - 1] = batch[i].size(-dim)
                     for sample in batch[i : i + samples_per_gpu]:
-                        for dim in range(0, ndim - batch[i].pad_dims):
+                        for dim in range(ndim - batch[i].pad_dims):
                             assert batch[i].size(dim) == sample.size(dim)
                         for dim in range(1, batch[i].pad_dims + 1):
                             max_shape[dim - 1] = max(

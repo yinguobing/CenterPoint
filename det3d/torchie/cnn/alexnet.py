@@ -1,6 +1,6 @@
 import logging
 
-import torch.nn as nn
+from torch import nn
 
 from ..trainer import load_checkpoint
 

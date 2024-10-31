@@ -1,8 +1,10 @@
 # The following code are copied from pytorch_scatter https://github.com/rusty1s/pytorch_scatter
 # Copyright (c) 2020 Matthias Fey <matthias.fey@tu-dortmund.de>
-# MIT License 
-from typing import Optional, Tuple
-import torch 
+# MIT License
+from typing import Optional
+
+import torch
+
 
 @torch.jit.script
 def broadcast(src: torch.Tensor, other: torch.Tensor, dim: int):
@@ -55,6 +57,6 @@ def scatter_mean(src: torch.Tensor, index: torch.Tensor, dim: int = -1,
     if torch.is_floating_point(out):
         out.div_(count)
     else:
-        assert 0 
+        assert 0
         # out.floor_divide_(count)
     return out

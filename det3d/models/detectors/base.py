@@ -1,10 +1,7 @@
 import logging
 from abc import ABCMeta, abstractmethod
 
-import numpy as np
-import pycocotools.mask as maskUtils
-import torch.nn as nn
-from det3d import torchie
+from torch import nn
 
 
 class BaseDetector(nn.Module):
@@ -61,7 +58,7 @@ class BaseDetector(nn.Module):
     def init_weights(self, pretrained=None):
         if pretrained is not None:
             logger = logging.getLogger()
-            logger.info("load model from: {}".format(pretrained))
+            logger.info(f"load model from: {pretrained}")
 
     def forward_test(self, imgs, **kwargs):
         pass

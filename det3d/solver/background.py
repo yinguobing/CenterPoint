@@ -1,4 +1,5 @@
-import threading, queue
+import queue
+import threading
 
 
 class BackgroundGenerator(threading.Thread):

@@ -1,25 +1,22 @@
-from det3d import torchie
-import numpy as np
-import torch
 
 from ..registry import PIPELINES
 
 
-class DataBundle(object):
+class DataBundle:
     def __init__(self, data):
         self.data = data
 
 
 @PIPELINES.register_module
-class Reformat(object):
+class Reformat:
     def __init__(self, **kwargs):
         double_flip = kwargs.get('double_flip', False)
-        self.double_flip = double_flip 
+        self.double_flip = double_flip
 
     def __call__(self, res, info):
         meta = res["metadata"]
         points = res["lidar"]["points"]
-        
+
         data_bundle = dict(
             metadata=meta
         )
@@ -27,7 +24,7 @@ class Reformat(object):
             data_bundle.update(points=points)
 
         if 'voxels' in res["lidar"]:
-            voxels = res["lidar"]["voxels"] 
+            voxels = res["lidar"]["voxels"]
 
             data_bundle.update(
                 voxels=voxels["voxels"],
@@ -43,9 +40,9 @@ class Reformat(object):
             data_bundle.update(dict(metadata=meta, ))
 
             if self.double_flip:
-                # y axis 
+                # y axis
                 yflip_points = res["lidar"]["yflip_points"]
-                yflip_voxels = res["lidar"]["yflip_voxels"] 
+                yflip_voxels = res["lidar"]["yflip_voxels"]
                 yflip_data_bundle = dict(
                     metadata=meta,
                     points=yflip_points,
@@ -56,9 +53,9 @@ class Reformat(object):
                     coordinates=yflip_voxels["coordinates"],
                 )
 
-                # x axis 
+                # x axis
                 xflip_points = res["lidar"]["xflip_points"]
-                xflip_voxels = res["lidar"]["xflip_voxels"] 
+                xflip_voxels = res["lidar"]["xflip_voxels"]
                 xflip_data_bundle = dict(
                     metadata=meta,
                     points=xflip_points,
@@ -68,9 +65,9 @@ class Reformat(object):
                     num_voxels=xflip_voxels["num_voxels"],
                     coordinates=xflip_voxels["coordinates"],
                 )
-                # double axis flip 
+                # double axis flip
                 double_flip_points = res["lidar"]["double_flip_points"]
-                double_flip_voxels = res["lidar"]["double_flip_voxels"] 
+                double_flip_voxels = res["lidar"]["double_flip_voxels"]
                 double_flip_data_bundle = dict(
                     metadata=meta,
                     points=double_flip_points,

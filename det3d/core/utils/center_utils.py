@@ -2,17 +2,15 @@
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
 # Written by Bin Xiao (Bin.Xiao@microsoft.com)
-# Modified by Xingyi Zhou and Tianwei Yin 
+# Modified by Xingyi Zhou and Tianwei Yin
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import numpy as np
 import torch
-from torch import nn
+
 from .circle_nms_jit import circle_nms
+
 
 def gaussian_radius(det_size, min_overlap=0.5):
     height, width = det_size
@@ -37,7 +35,7 @@ def gaussian_radius(det_size, min_overlap=0.5):
     return min(r1, r2, r3)
 
 def gaussian2D(shape, sigma=1):
-    m, n = [(ss - 1.) / 2. for ss in shape]
+    m, n = ((ss - 1.) / 2. for ss in shape)
     y, x = np.ogrid[-m:m+1,-n:n+1]
 
     h = np.exp(-(x * x + y * y) / (2 * sigma * sigma))
@@ -86,7 +84,7 @@ def _circle_nms(boxes, min_radius, post_max_size=83):
 
     keep = torch.from_numpy(keep).long().to(boxes.device)
 
-    return keep 
+    return keep
 
 
 def bilinear_interpolate_torch(im, x, y):
@@ -117,5 +115,5 @@ def bilinear_interpolate_torch(im, x, y):
     wb = (x1.type_as(x) - x) * (y - y0.type_as(y))
     wc = (x - x0.type_as(x)) * (y1.type_as(y) - y)
     wd = (x - x0.type_as(x)) * (y - y0.type_as(y))
-    ans = torch.t((torch.t(Ia) * wa)) + torch.t(torch.t(Ib) * wb) + torch.t(torch.t(Ic) * wc) + torch.t(torch.t(Id) * wd)
+    ans = torch.t(torch.t(Ia) * wa) + torch.t(torch.t(Ib) * wb) + torch.t(torch.t(Ic) * wc) + torch.t(torch.t(Id) * wd)
     return ans

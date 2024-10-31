@@ -1,12 +1,11 @@
 import logging
 import os.path as osp
 import queue
-import sys
 import threading
-import time
 from collections import OrderedDict
 
 import torch
+
 from det3d import torchie
 
 from . import hooks
@@ -102,7 +101,7 @@ class BackgroundGenerator(threading.Thread):
         return self
 
 
-class Prefetcher(object):
+class Prefetcher:
     def __init__(self, dataloader):
         self.loader = iter(dataloader)
         self.stream = torch.cuda.Stream()
@@ -126,7 +125,7 @@ class Prefetcher(object):
         return input
 
 
-class Trainer(object):
+class Trainer:
     """ A training helper for PyTorch
 
     Args:
@@ -254,7 +253,7 @@ class Trainer(object):
         elif not isinstance(optimizer, torch.optim.Optimizer):
             raise TypeError(
                 "optimizer must be either an Optimizer object or a dict, "
-                "but got {}".format(type(optimizer))
+                f"but got {type(optimizer)}"
             )
         return optimizer
 
@@ -281,7 +280,7 @@ class Trainer(object):
         )
         logger = logging.getLogger(__name__)
         if log_dir and self.rank == 0:
-            filename = "{}.log".format(self.timestamp)
+            filename = f"{self.timestamp}.log"
             log_file = osp.join(log_dir, filename)
             self._add_file_handler(logger, log_file, level=level)
         return logger
@@ -322,7 +321,7 @@ class Trainer(object):
         else:
             raise TypeError(
                 "'args' must be either a Hook object"
-                " or dict, not {}".format(type(args))
+                f" or dict, not {type(args)}"
             )
 
     def call_hook(self, fn_name):
@@ -481,7 +480,7 @@ class Trainer(object):
     def resume(self, checkpoint, resume_optimizer=True, map_location="default"):
         if map_location == "default":
             checkpoint = self.load_checkpoint(
-                checkpoint , map_location='cuda:{}'.format(torch.cuda.current_device()) # TODO: FIX THIS!!
+                checkpoint , map_location=f'cuda:{torch.cuda.current_device()}' # TODO: FIX THIS!!
             )
         else:
             checkpoint = self.load_checkpoint(checkpoint, map_location=map_location)
@@ -520,9 +519,7 @@ class Trainer(object):
                 if isinstance(mode, str):
                     if not hasattr(self, mode):
                         raise ValueError(
-                            "Trainer has no method named '{}' to run an epoch".format(
-                                mode
-                            )
+                            f"Trainer has no method named '{mode}' to run an epoch"
                         )
                     epoch_runner = getattr(self, mode)
                 elif callable(mode):
@@ -530,7 +527,7 @@ class Trainer(object):
                 else:
                     raise TypeError(
                         "mode in workflow must be a str or "
-                        "callable function not '{}'".format(type(mode))
+                        f"callable function not '{type(mode)}'"
                     )
 
                 for _ in range(epochs):
@@ -551,13 +548,13 @@ class Trainer(object):
             assert "policy" in lr_config
             hook_name = lr_config["policy"].title() + "LrUpdaterHook"
             if not hasattr(lr_updater, hook_name):
-                raise ValueError('"{}" does not exist'.format(hook_name))
+                raise ValueError(f'"{hook_name}" does not exist')
             hook_cls = getattr(lr_updater, hook_name)
             self.register_hook(hook_cls(**lr_config))
         else:
             raise TypeError(
                 "'lr_config' must be eigher a LrUpdaterHook object"
-                " or dict, not '{}'".format(type(lr_config))
+                f" or dict, not '{type(lr_config)}'"
             )
 
     def register_logger_hooks(self, log_config):

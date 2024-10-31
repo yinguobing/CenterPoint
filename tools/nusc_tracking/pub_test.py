@@ -1,23 +1,13 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
-import os
-import sys 
-import json
-import numpy as np
-import time
-import copy
 import argparse
-import copy
 import json
 import os
-import numpy as np
-from pub_tracker import PubTracker as Tracker
-from nuscenes import NuScenes
-import json 
 import time
+
+from nuscenes import NuScenes
 from nuscenes.utils import splits
+from pub_tracker import PubTracker as Tracker
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Tracking Evaluation")
@@ -41,27 +31,27 @@ def save_first_frame():
     if args.version == 'v1.0-trainval':
         scenes = splits.val
     elif args.version == 'v1.0-test':
-        scenes = splits.test 
+        scenes = splits.test
     else:
         raise ValueError("unknown")
 
     frames = []
     for sample in nusc.sample:
-        scene_name = nusc.get("scene", sample['scene_token'])['name'] 
+        scene_name = nusc.get("scene", sample['scene_token'])['name']
         if scene_name not in scenes:
-            continue 
+            continue
 
         timestamp = sample["timestamp"] * 1e-6
         token = sample["token"]
         frame = {}
         frame['token'] = token
-        frame['timestamp'] = timestamp 
+        frame['timestamp'] = timestamp
 
         # start of a sequence
         if sample['prev'] == '':
-            frame['first'] = True 
+            frame['first'] = True
         else:
-            frame['first'] = False 
+            frame['first'] = False
         frames.append(frame)
 
     del nusc
@@ -69,7 +59,7 @@ def save_first_frame():
     res_dir = os.path.join(args.work_dir)
     if not os.path.exists(res_dir):
         os.makedirs(res_dir)
-    
+
     with open(os.path.join(args.work_dir, 'frames_meta.json'), "w") as f:
         json.dump({'frames': frames}, f)
 
@@ -104,7 +94,7 @@ def main():
             tracker.reset()
             last_time_stamp = frames[i]['timestamp']
 
-        time_lag = (frames[i]['timestamp'] - last_time_stamp) 
+        time_lag = (frames[i]['timestamp'] - last_time_stamp)
         last_time_stamp = frames[i]['timestamp']
 
         preds = predictions[token]
@@ -114,7 +104,7 @@ def main():
 
         for item in outputs:
             if item['active'] == 0:
-                continue 
+                continue
             nusc_anno = {
                 "sample_token": token,
                 "translation": item['translation'],
@@ -128,13 +118,13 @@ def main():
             annos.append(nusc_anno)
         nusc_annos["results"].update({token: annos})
 
-    
+
     end = time.time()
 
-    second = (end-start) 
+    second = (end-start)
 
     speed=size / second
-    print("The speed is {} FPS".format(speed))
+    print(f"The speed is {speed} FPS")
 
     nusc_annos["meta"] = {
         "use_camera": False,
@@ -161,10 +151,10 @@ def eval_tracking():
     )
 
 def eval(res_path, eval_set="val", output_dir=None, root_path=None):
-    from nuscenes.eval.tracking.evaluate import TrackingEval 
     from nuscenes.eval.common.config import config_factory as track_configs
+    from nuscenes.eval.tracking.evaluate import TrackingEval
 
-    
+
     cfg = track_configs("tracking_nips_2019")
     nusc_eval = TrackingEval(
         config=cfg,
@@ -183,7 +173,7 @@ def test_time():
     for i in range(3):
         speeds.append(main())
 
-    print("Speed is {} FPS".format( max(speeds)  ))
+    print(f"Speed is {max(speeds)} FPS")
 
 if __name__ == '__main__':
     save_first_frame()

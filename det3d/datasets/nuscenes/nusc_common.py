@@ -1,20 +1,19 @@
-import numpy as np
 import pickle
-
-from pathlib import Path
 from functools import reduce
+from pathlib import Path
 from typing import List
 
-from tqdm import tqdm
+import numpy as np
 from pyquaternion import Quaternion
+from tqdm import tqdm
 
 try:
     from nuscenes import NuScenes
+    from nuscenes.eval.detection.config import config_factory
+    from nuscenes.eval.detection.evaluate import NuScenesEval
     from nuscenes.utils import splits
     from nuscenes.utils.data_classes import Box
     from nuscenes.utils.geometry_utils import transform_matrix
-    from nuscenes.eval.detection.config import config_factory
-    from nuscenes.eval.detection.evaluate import NuScenesEval
 except:
     print("nuScenes devkit not Found!")
 
@@ -276,8 +275,8 @@ CAM_CHANS = ['CAM_FRONT', 'CAM_FRONT_RIGHT', 'CAM_BACK_RIGHT', 'CAM_BACK', 'CAM_
 
 def get_lidar_to_image_transform(nusc, pointsensor,  camera_sensor):
     tms = []
-    intrinsics = []  
-    cam_paths = [] 
+    intrinsics = []
+    cam_paths = []
     for chan in CAM_CHANS:
         cam = camera_sensor[chan]
 
@@ -319,12 +318,12 @@ def get_lidar_to_image_transform(nusc, pointsensor,  camera_sensor):
         intrinsics.append(intrinsic)
         cam_paths.append(cam_path )
 
-    return tms, intrinsics, cam_paths  
+    return tms, intrinsics, cam_paths
 
 def find_closet_camera_tokens(nusc, pointsensor, ref_sample):
     lidar_timestamp = pointsensor["timestamp"]
 
-    min_cams = {} 
+    min_cams = {}
 
     for chan in CAM_CHANS:
         camera_token = ref_sample['data'][chan]
@@ -333,9 +332,9 @@ def find_closet_camera_tokens(nusc, pointsensor, ref_sample):
         min_diff = abs(lidar_timestamp - cam['timestamp'])
         min_cam = cam
 
-        for i in range(6):  # nusc allows at most 6 previous camera frames 
+        for i in range(6):  # nusc allows at most 6 previous camera frames
             if cam['prev'] == "":
-                break 
+                break
 
             cam = nusc.get('sample_data', cam['prev'])
             cam_timestamp = cam['timestamp']
@@ -343,12 +342,12 @@ def find_closet_camera_tokens(nusc, pointsensor, ref_sample):
             diff = abs(lidar_timestamp-cam_timestamp)
 
             if (diff < min_diff):
-                min_diff = diff 
-                min_cam = cam 
-            
-        min_cams[chan] = min_cam 
+                min_diff = diff
+                min_cam = cam
 
-    return min_cams     
+        min_cams[chan] = min_cam
+
+    return min_cams
 
 
 def _fill_trainval_infos(nusc, train_scenes, val_scenes, test=False, nsweeps=10, filter_zero=True):
@@ -361,7 +360,7 @@ def _fill_trainval_infos(nusc, train_scenes, val_scenes, test=False, nsweeps=10,
     chan = "LIDAR_TOP"  # The reference channel of the current sample_rec that the point clouds are mapped to.
 
     for sample in tqdm(nusc.sample):
-        """ Manual save info["sweeps"] """        
+        """ Manual save info["sweeps"] """
         # Get reference pose and timestamp
         # ref_chan == "LIDAR_TOP"
         ref_sd_token = sample["data"][ref_chan]
@@ -395,10 +394,10 @@ def _fill_trainval_infos(nusc, train_scenes, val_scenes, test=False, nsweeps=10,
             camera_token = sample['data'][cam_chan]
             cam = nusc.get('sample_data', camera_token)
 
-            ref_cams[cam_chan] = cam 
+            ref_cams[cam_chan] = cam
 
-        # get camera info for point painting 
-        all_cams_from_lidar, all_cams_intrinsic, all_cams_path = get_lidar_to_image_transform(nusc, pointsensor=ref_sd_rec, camera_sensor=ref_cams)    
+        # get camera info for point painting
+        all_cams_from_lidar, all_cams_intrinsic, all_cams_path = get_lidar_to_image_transform(nusc, pointsensor=ref_sd_rec, camera_sensor=ref_cams)
 
         info = {
             "lidar_path": ref_lidar_path,
@@ -435,9 +434,9 @@ def _fill_trainval_infos(nusc, train_scenes, val_scenes, test=False, nsweeps=10,
             else:
                 curr_sd_rec = nusc.get("sample_data", curr_sd_rec["prev"])
 
-                # get nearest camera frame data 
+                # get nearest camera frame data
                 cam_data = find_closet_camera_tokens(nusc, curr_sd_rec, ref_sample=sample)
-                cur_cams_from_lidar, cur_cams_intrinsic, cur_cams_path = get_lidar_to_image_transform(nusc, pointsensor=curr_sd_rec, camera_sensor=cam_data)   
+                cur_cams_from_lidar, cur_cams_intrinsic, cur_cams_path = get_lidar_to_image_transform(nusc, pointsensor=curr_sd_rec, camera_sensor=cam_data)
 
                 # Get past pose
                 current_pose_rec = nusc.get("ego_pose", curr_sd_rec["ego_pose_token"])
@@ -484,7 +483,7 @@ def _fill_trainval_infos(nusc, train_scenes, val_scenes, test=False, nsweeps=10,
         assert (
             len(info["sweeps"]) == nsweeps - 1
         )
-        
+
         if not test:
             annotations = [
                 nusc.get("sample_annotation", token) for token in sample["anns"]
@@ -590,7 +589,7 @@ def create_nuscenes_infos(root_path, version="v1.0-trainval", nsweeps=10, filter
     if test:
         print(f"test sample: {len(train_nusc_infos)}")
         with open(
-            root_path / "infos_test_{:02d}sweeps_withvelo.pkl".format(nsweeps), "wb"
+            root_path / f"infos_test_{nsweeps:02d}sweeps_withvelo.pkl", "wb"
         ) as f:
             pickle.dump(train_nusc_infos, f)
     else:
@@ -598,11 +597,11 @@ def create_nuscenes_infos(root_path, version="v1.0-trainval", nsweeps=10, filter
             f"train sample: {len(train_nusc_infos)}, val sample: {len(val_nusc_infos)}"
         )
         with open(
-            root_path / "infos_train_{:02d}sweeps_withvelo_filter_{}.pkl".format(nsweeps, filter_zero), "wb"
+            root_path / f"infos_train_{nsweeps:02d}sweeps_withvelo_filter_{filter_zero}.pkl", "wb"
         ) as f:
             pickle.dump(train_nusc_infos, f)
         with open(
-            root_path / "infos_val_{:02d}sweeps_withvelo_filter_{}.pkl".format(nsweeps, filter_zero), "wb"
+            root_path / f"infos_val_{nsweeps:02d}sweeps_withvelo_filter_{filter_zero}.pkl", "wb"
         ) as f:
             pickle.dump(val_nusc_infos, f)
 

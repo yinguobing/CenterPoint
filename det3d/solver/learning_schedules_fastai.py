@@ -1,10 +1,9 @@
-import math
 from functools import partial
 
 import numpy as np
 
 
-class LRSchedulerStep(object):
+class LRSchedulerStep:
     def __init__(self, fai_optimizer, total_step, lr_phases, mom_phases):
         self.optimizer = fai_optimizer
         self.total_step = total_step

@@ -1,17 +1,11 @@
-import os.path as osp
-import numpy as np
-import pickle
-import random
-
-from pathlib import Path
-from functools import reduce
-from typing import Tuple, List
-import os 
-import json 
-from tqdm import tqdm
 import argparse
+import os
+import pickle
+from functools import reduce
 
+import numpy as np
 from tqdm import tqdm
+
 try:
     import tensorflow as tf
     tf.enable_eager_execution()
@@ -20,7 +14,6 @@ except:
 
 from nuscenes.utils.geometry_utils import transform_matrix
 from pyquaternion import Quaternion
-
 
 CAT_NAME_TO_ID = {
     'VEHICLE': 1,
@@ -33,19 +26,20 @@ TYPE_LIST = ['UNKNOWN', 'VEHICLE', 'PEDESTRIAN', 'SIGN', 'CYCLIST']
 def get_obj(path):
     with open(path, 'rb') as f:
             obj = pickle.load(f)
-    return obj 
+    return obj
 
-# ignore sign class 
+# ignore sign class
 LABEL_TO_TYPE = {0: 1, 1:2, 2:4}
 
-import uuid 
+import uuid
 
-class UUIDGeneration():
+
+class UUIDGeneration:
     def __init__(self):
         self.mapping = {}
     def get_uuid(self,seed):
         if seed not in self.mapping:
-            self.mapping[seed] = uuid.uuid4().hex 
+            self.mapping[seed] = uuid.uuid4().hex
         return self.mapping[seed]
 uuid_gen = UUIDGeneration()
 
@@ -67,7 +61,7 @@ def _create_pd_detection(detections, infos, result_path, tracking=False):
         # transform back to Waymo coordinate
         # x,y,z,w,l,h,r2
         # x,y,z,l,w,h,r1
-        # r2 = -pi/2 - r1  
+        # r2 = -pi/2 - r1
         box3d[:, -1] = -box3d[:, -1] - np.pi / 2
         box3d = box3d[:, [0, 1, 2, 4, 3, 5, -1]]
 
@@ -96,7 +90,7 @@ def _create_pd_detection(detections, infos, result_path, tracking=False):
             o.object.box.CopyFrom(box)
             o.score = score
             # Use correct type.
-            o.object.type = LABEL_TO_TYPE[label] 
+            o.object.type = LABEL_TO_TYPE[label]
 
             if tracking:
                 o.object.id = uuid_gen.get_uuid(int(tracking_ids[i]))
@@ -109,7 +103,7 @@ def _create_pd_detection(detections, infos, result_path, tracking=False):
     else:
         path = os.path.join(result_path, 'detection_pred.bin')
 
-    print("results saved to {}".format(path))
+    print(f"results saved to {path}")
     f = open(path, 'wb')
     f.write(objects.SerializeToString())
     f.close()
@@ -118,10 +112,10 @@ def _create_gt_detection(infos, tracking=True):
     """Creates a gt prediction object file for local evaluation."""
     from waymo_open_dataset import label_pb2
     from waymo_open_dataset.protos import metrics_pb2
-    
+
     objects = metrics_pb2.Objects()
 
-    for idx in tqdm(range(len(infos))): 
+    for idx in tqdm(range(len(infos))):
         info = infos[idx]
 
         obj = get_obj(info['anno_path'])
@@ -130,7 +124,7 @@ def _create_gt_detection(infos, tracking=True):
         box3d = np.array([ann['box'] for ann in annos])
 
         if len(box3d) == 0:
-            continue 
+            continue
 
         names = np.array([TYPE_LIST[ann['label']] for ann in annos])
 
@@ -138,9 +132,9 @@ def _create_gt_detection(infos, tracking=True):
 
         for i in range(box3d.shape[0]):
             if num_points_in_gt[i] == 0:
-                continue 
+                continue
             if names[i] == 'UNKNOWN':
-                continue 
+                continue
 
             det  = box3d[i]
             score = 1.0
@@ -167,7 +161,7 @@ def _create_gt_detection(infos, tracking=True):
             o.object.id = annos[i]['name']
 
             objects.objects.append(o)
-        
+
     # Write objects to a file.
     f = open(os.path.join(args.result_path, 'gt_preds.bin'), 'wb')
     f.write(objects.SerializeToString())
@@ -175,7 +169,7 @@ def _create_gt_detection(infos, tracking=True):
 
 def veh_pos_to_transform(veh_pos):
     "convert vehicle pose to two transformation matrix"
-    rotation = veh_pos[:3, :3] 
+    rotation = veh_pos[:3, :3]
     tran = veh_pos[:3, 3]
 
     global_from_car = transform_matrix(
@@ -203,7 +197,7 @@ def _fill_infos(root_path, frames, split='train', nsweeps=1):
 
         info = {
             "path": lidar_path,
-            "anno_path": ref_path, 
+            "anno_path": ref_path,
             "token": frame_name,
             "timestamp": ref_time,
             "sweeps": []
@@ -213,7 +207,7 @@ def _fill_infos(root_path, frames, split='train', nsweeps=1):
         frame_id = int(frame_name.split("_")[3][:-4]) # remove .pkl
 
         prev_id = frame_id
-        sweeps = [] 
+        sweeps = []
         while len(sweeps) < nsweeps - 1:
             if prev_id <= 0:
                 if len(sweeps) == 0:
@@ -228,16 +222,16 @@ def _fill_infos(root_path, frames, split='train', nsweeps=1):
                     sweeps.append(sweeps[-1])
             else:
                 prev_id = prev_id - 1
-                # global identifier  
+                # global identifier
 
-                curr_name = 'seq_{}_frame_{}.pkl'.format(sequence_id, prev_id)
+                curr_name = f'seq_{sequence_id}_frame_{prev_id}.pkl'
                 curr_lidar_path = os.path.join(root_path, split, 'lidar', curr_name)
                 curr_label_path = os.path.join(root_path, split, 'annos', curr_name)
-                
+
                 curr_obj = get_obj(curr_label_path)
                 curr_pose = np.reshape(curr_obj['veh_to_global'], [4, 4])
-                global_from_car, _ = veh_pos_to_transform(curr_pose) 
-                
+                global_from_car, _ = veh_pos_to_transform(curr_pose)
+
                 tm = reduce(
                     np.dot,
                     [ref_from_global, global_from_car],
@@ -256,23 +250,23 @@ def _fill_infos(root_path, frames, split='train', nsweeps=1):
         info["sweeps"] = sweeps
 
         if split != 'test':
-            # read boxes 
+            # read boxes
             TYPE_LIST = ['UNKNOWN', 'VEHICLE', 'PEDESTRIAN', 'SIGN', 'CYCLIST']
             annos = ref_obj['objects']
             num_points_in_gt = np.array([ann['num_points'] for ann in annos])
             gt_boxes = np.array([ann['box'] for ann in annos]).reshape(-1, 9)
-            
+
             if len(gt_boxes) != 0:
-                # transform from Waymo to KITTI coordinate 
+                # transform from Waymo to KITTI coordinate
                 # Waymo: x, y, z, length, width, height, rotation from positive x axis clockwisely
-                # KITTI: x, y, z, width, length, height, rotation from negative y axis counterclockwisely 
+                # KITTI: x, y, z, width, length, height, rotation from negative y axis counterclockwisely
                 gt_boxes[:, -1] = -np.pi / 2 - gt_boxes[:, -1]
                 gt_boxes[:, [3, 4]] = gt_boxes[:, [4, 3]]
 
             gt_names = np.array([TYPE_LIST[ann['label']] for ann in annos])
-            mask_not_zero = (num_points_in_gt > 0).reshape(-1)    
+            mask_not_zero = (num_points_in_gt > 0).reshape(-1)
 
-            # filter boxes without lidar points 
+            # filter boxes without lidar points
             info['gt_boxes'] = gt_boxes[mask_not_zero, :].astype(np.float32)
             info['gt_names'] = gt_names[mask_not_zero].astype(str)
 
@@ -280,7 +274,7 @@ def _fill_infos(root_path, frames, split='train', nsweeps=1):
     return infos
 
 def sort_frame(frames):
-    indices = [] 
+    indices = []
 
     for f in frames:
         seq_id = int(f.split("_")[1])
@@ -315,7 +309,7 @@ def create_waymo_infos(root_path, split='train', nsweeps=1):
         f"sample: {len(waymo_infos)}"
     )
     with open(
-        os.path.join(root_path, "infos_"+split+"_{:02d}sweeps_filter_zero_gt.pkl".format(nsweeps)), "wb"
+        os.path.join(root_path, "infos_"+split+f"_{nsweeps:02d}sweeps_filter_zero_gt.pkl"), "wb"
     ) as f:
         pickle.dump(waymo_infos, f)
 
@@ -337,17 +331,17 @@ def reorganize_info(infos):
         token = info['token']
         new_info[token] = info
 
-    return new_info 
+    return new_info
 
 if __name__ == "__main__":
     args = parse_args()
 
     with open(args.info_path, 'rb') as f:
         infos = pickle.load(f)
-    
+
     if args.gt:
         _create_gt_detection(infos, tracking=args.tracking)
-        exit() 
+        exit()
 
     infos = reorganize_info(infos)
     with open(args.path, 'rb') as f:

@@ -1,5 +1,6 @@
 import os
-import numpy as np 
+
+import numpy as np
 
 scores = {
     0: np.arange(0.4, 0.8, 0.02),
@@ -21,14 +22,14 @@ for label in range(3):
         for dist in dist_list:
             work_dir = "waymo_track/label_{}_score_{}_max_age_{}_dist_{}".format(label, score, dist)
 
-            cmd=("python tools/waymo_tracking/test.py " + 
+            cmd=("python tools/waymo_tracking/test.py " +
                 "--checkpoint /home/tianweiy/base/work_dirs/waymo_centerpoint_voxelnet_two_sweeps_3x_with_velo/prediction.pkl"
-                "--work_dir {}".format(work_dir) + 
-                "  --info_path data/Waymo/infos_val_02sweeps_filter_zero_gt.pkl" + 
-                "--vehicle {}  --pedestrian {}  --cyclist".format(dist, dist, dist) +
-                "--score_thresh {}".format(score) + 
-                "--name {}".format(label) + 
-                "> {}/stats.txt ".format(work_dir)
+                f"--work_dir {work_dir}" +
+                "  --info_path data/Waymo/infos_val_02sweeps_filter_zero_gt.pkl" +
+                f"--vehicle {dist}  --pedestrian {dist}  --cyclist" +
+                f"--score_thresh {score}" +
+                f"--name {label}" +
+                f"> {work_dir}/stats.txt "
             )[0]
 
             print(cmd)

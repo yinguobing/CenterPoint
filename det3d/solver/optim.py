@@ -1,9 +1,5 @@
-from collections import Iterable, defaultdict
-from copy import deepcopy
-from itertools import chain
 
 import torch
-from torch.autograd import Variable
 
 required = object()
 
@@ -32,7 +28,7 @@ def set_grad(params, params_with_grad, scale=1.0):
     return False
 
 
-class MixedPrecisionWrapper(object):
+class MixedPrecisionWrapper:
     """mixed precision optimizer wrapper.
     Arguments:
         optimizer (torch.optim.Optimizer): an instance of
@@ -98,7 +94,7 @@ class MixedPrecisionWrapper(object):
                 if self.grad_scale is None or self.auto_scale is False:
                     raise ValueError("nan/inf detected but auto_scale disabled.")
                 self.grad_scale *= self.dec_factor
-                print("scale decay to {}".format(self.grad_scale))
+                print(f"scale decay to {self.grad_scale}")
                 return
         if self.auto_scale is True:
             self.stable_iter_count += 1

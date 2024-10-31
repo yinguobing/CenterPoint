@@ -93,14 +93,15 @@ Directory-level operations::
 
 
 """
-import os
-import io
 import codecs
-from typing import Tuple, Iterable, Optional, List
-from pathlib import PosixPath
-from urllib.parse import urlparse, urlunparse
+import io
+import os
 import re
 import socket
+from pathlib import PosixPath
+from typing import Iterable, List, Optional, Tuple
+from urllib.parse import urlparse
+
 import boto3
 from botocore.errorfactory import ClientError
 
@@ -112,7 +113,7 @@ def get_site():
 
 
 OSS_ENDPOINT = os.getenv(
-    "OSS_ENDPOINT", default="http://oss.{}.brainpp.cn".format(get_site()),
+    "OSS_ENDPOINT", default=f"http://oss.{get_site()}.brainpp.cn",
 )
 
 
@@ -212,7 +213,7 @@ class OSSPath:
         return self._key_parts
 
     def __str__(self) -> str:
-        return "s3://{}/{}".format(self.bucket, self.key)
+        return f"s3://{self.bucket}/{self.key}"
 
     def __eq__(self, other):
         if not isinstance(other, OSSPath):
@@ -223,26 +224,26 @@ class OSSPath:
         return hash(str(self))
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, str(self))
+        return f"{self.__class__.__name__}({self!s})"
 
     def __lt__(self, other):
         if not isinstance(other, OSSPath):
-            raise NotImplementedError()
+            raise NotImplementedError
         return str(self) < str(other)
 
     def __le__(self, other):
         if not isinstance(other, OSSPath):
-            raise NotImplementedError()
+            raise NotImplementedError
         return str(self) <= str(other)
 
     def __gt__(self, other):
         if not isinstance(other, OSSPath):
-            raise NotImplementedError()
+            raise NotImplementedError
         return str(self) > str(other)
 
     def __ge__(self, other):
         if not isinstance(other, OSSPath):
-            raise NotImplementedError()
+            raise NotImplementedError
         return str(self) >= str(other)
 
     def with_name(self, name):
@@ -318,7 +319,7 @@ class OSSPath:
         return self._make_child((key,))
 
     def __rtruediv__(self, key):
-        raise NotImplemented
+        raise NotImplementedError
 
     def is_dir(self):
         if not self.bucket:
@@ -356,9 +357,7 @@ class OSSPath:
     def exists(self):
         if not self.bucket:
             return False
-        if self.is_dir():
-            return True
-        elif self.is_file():
+        if self.is_dir() or self.is_file():
             return True
         return False
 
@@ -408,9 +407,7 @@ class OSSPath:
                 break
 
             print(
-                "More than {} objects are found under {}, you should avoid putting too many small objects!".format(
-                    batch_size, self
-                )
+                f"More than {batch_size} objects are found under {self}, you should avoid putting too many small objects!"
             )
             marker = resp["NextMarker"]
 
@@ -460,9 +457,7 @@ class OSSPath:
                 break
 
             print(
-                "More than {} objects are found under {}, you should avoid putting too many small objects!".format(
-                    batch_size, self
-                )
+                f"More than {batch_size} objects are found under {self}, you should avoid putting too many small objects!"
             )
             marker = resp["NextMarker"]
 
@@ -496,7 +491,7 @@ class OSSPath:
         """
 
         if not self.is_file():
-            raise FileNotFoundError("{!r} is not an existing object.".format(self))
+            raise FileNotFoundError(f"{self!r} is not an existing object.")
 
         r = self._client.get_object(Bucket=self.bucket, Key=self.key)
         b = r["Body"]
@@ -511,9 +506,9 @@ class OSSPath:
         :returns: wheter successfully uploaded
         """
         if not self.bucket or not self.key:
-            raise ValueError("Invalid path to put object: {!r}".format(self))
+            raise ValueError(f"Invalid path to put object: {self!r}")
         if self.key.endswith("/"):
-            raise ValueError('Object key cannot endswith "/": {}'.format(self.key))
+            raise ValueError(f'Object key cannot endswith "/": {self.key}')
 
         r = self._client.put_object(
             Body=bytes_or_file, Bucket=self.bucket, Key=self.key,
@@ -536,7 +531,7 @@ class OSSPath:
         """
         if not self.is_dir():
             if self.is_file():
-                raise ValueError("{!r} is not a directory".format(self))
+                raise ValueError(f"{self!r} is not a directory")
             return True
 
         if batch_size > 1000:
@@ -567,9 +562,7 @@ class OSSPath:
                 break
 
             print(
-                "More than {} objects are found under {}, you should avoid putting too many small objects!".format(
-                    batch_size, self
-                )
+                f"More than {batch_size} objects are found under {self}, you should avoid putting too many small objects!"
             )
 
         return ret

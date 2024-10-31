@@ -7,7 +7,7 @@ class TimerError(Exception):
         super(TimerError, self).__init__(message)
 
 
-class Timer(object):
+class Timer:
     """A flexible Timer class.
 
     :Example:

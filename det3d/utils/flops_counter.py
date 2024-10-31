@@ -27,7 +27,7 @@ import sys
 
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.conv import _ConvNd, _ConvTransposeMixin
 from torch.nn.modules.pooling import (
@@ -101,15 +101,14 @@ def flops_to_string(flops, units="GMac", precision=2):
             return str(round(flops / 10.0 ** 3, precision)) + " KMac"
         else:
             return str(flops) + " Mac"
+    elif units == "GMac":
+        return str(round(flops / 10.0 ** 9, precision)) + " " + units
+    elif units == "MMac":
+        return str(round(flops / 10.0 ** 6, precision)) + " " + units
+    elif units == "KMac":
+        return str(round(flops / 10.0 ** 3, precision)) + " " + units
     else:
-        if units == "GMac":
-            return str(round(flops / 10.0 ** 9, precision)) + " " + units
-        elif units == "MMac":
-            return str(round(flops / 10.0 ** 6, precision)) + " " + units
-        elif units == "KMac":
-            return str(round(flops / 10.0 ** 3, precision)) + " " + units
-        else:
-            return str(flops) + " Mac"
+        return str(flops) + " Mac"
 
 
 def params_to_string(params_num):
@@ -150,7 +149,7 @@ def print_model_with_flops(model, units="GMac", precision=3, ost=sys.stdout):
                 flops_to_string(
                     accumulated_flops_cost, units=units, precision=precision
                 ),
-                "{:.3%} MACs".format(accumulated_flops_cost / total_flops),
+                f"{accumulated_flops_cost / total_flops:.3%} MACs",
                 self.original_extra_repr(),
             ]
         )

@@ -39,7 +39,7 @@ class TensorboardLoggerHook(LoggerHook):
         for var in trainer.log_buffer.output:
             if var in ["time", "data_time"]:
                 continue
-            tag = "{}/{}".format(var, trainer.mode)
+            tag = f"{var}/{trainer.mode}"
             record = trainer.log_buffer.output[var]
             if isinstance(record, str):
                 self.writer.add_text(tag, record, trainer.iter)

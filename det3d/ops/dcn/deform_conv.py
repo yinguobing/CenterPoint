@@ -1,8 +1,8 @@
 import math
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
 from torch.nn.modules.utils import _pair, _single
@@ -26,8 +26,7 @@ class DeformConvFunction(Function):
                 im2col_step=64):
         if input is not None and input.dim() != 4:
             raise ValueError(
-                'Expected 4D tensor as input, got {}D tensor instead.'.format(
-                    input.dim()))
+                f'Expected 4D tensor as input, got {input.dim()}D tensor instead.')
         ctx.stride = _pair(stride)
         ctx.padding = _pair(padding)
         ctx.dilation = _pair(dilation)
@@ -205,11 +204,9 @@ class DeformConv(nn.Module):
 
         assert not bias
         assert in_channels % groups == 0, \
-            'in_channels {} cannot be divisible by groups {}'.format(
-                in_channels, groups)
+            f'in_channels {in_channels} cannot be divisible by groups {groups}'
         assert out_channels % groups == 0, \
-            'out_channels {} cannot be divisible by groups {}'.format(
-                out_channels, groups)
+            f'out_channels {out_channels} cannot be divisible by groups {groups}'
 
         self.in_channels = in_channels
         self.out_channels = out_channels

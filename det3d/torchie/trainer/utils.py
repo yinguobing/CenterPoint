@@ -12,11 +12,12 @@ from socket import gethostname
 
 import torch
 import torch.distributed as dist
+
 from det3d import torchie
 
 
 def get_host_info():
-    return "{}@{}".format(getuser(), gethostname())
+    return f"{getuser()}@{gethostname()}"
 
 
 def get_dist_info():
@@ -68,7 +69,7 @@ def obj_from_dict(info, parent=None, default_args=None):
             obj_type = sys.modules[obj_type]
     elif not isinstance(obj_type, type):
         raise TypeError(
-            "type must be a str or valid type, but got {}".format(type(obj_type))
+            f"type must be a str or valid type, but got {type(obj_type)}"
         )
     if default_args is not None:
         for name, value in default_args.items():

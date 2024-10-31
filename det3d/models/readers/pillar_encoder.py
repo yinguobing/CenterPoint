@@ -5,9 +5,11 @@ Licensed under MIT License [see LICENSE].
 """
 
 import torch
-from det3d.models.utils import get_paddings_indicator
 from torch import nn
 from torch.nn import functional as F
+
+from det3d.models.utils import get_paddings_indicator
+
 from ..registry import BACKBONES, READERS
 from ..utils import build_norm_layer
 
@@ -105,7 +107,7 @@ class PillarFeatureNet(nn.Module):
             )
         self.pfn_layers = nn.ModuleList(pfn_layers)
 
-        self.virtual = virtual 
+        self.virtual = virtual
 
         # Need pillar (voxel) size and x/y offset in order to calculate pillar offset
         self.vx = voxel_size[0]
@@ -120,7 +122,7 @@ class PillarFeatureNet(nn.Module):
             virtual_point_mask = features[..., -2] == -1
             virtual_points = features[virtual_point_mask]
             virtual_points[..., -2] = 1
-            features[..., -2] = 0 
+            features[..., -2] = 0
             features[virtual_point_mask] = virtual_points
 
         dtype = features.dtype

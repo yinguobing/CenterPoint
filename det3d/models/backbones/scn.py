@@ -1,18 +1,17 @@
 import numpy as np
+
 try:
-    import spconv.pytorch as spconv 
-    from spconv.pytorch import ops
+    import spconv.pytorch as spconv
     from spconv.pytorch import SparseConv3d, SubMConv3d
-except: 
-    import spconv 
-    from spconv import ops
+except:
+    import spconv
     from spconv import SparseConv3d, SubMConv3d
 
 from torch import nn
-from torch.nn import functional as F
 
 from ..registry import BACKBONES
 from ..utils import build_norm_layer
+
 
 def replace_feature(out, new_features):
     if "replace_feature" in out.__dir__():
@@ -115,7 +114,7 @@ class SpMiddleResNetFHD(nn.Module):
             nn.ReLU(inplace=True)
         )
 
-        self.conv1 = spconv.SparseSequential(        
+        self.conv1 = spconv.SparseSequential(
             SparseBasicBlock(16, 16, norm_cfg=norm_cfg, indice_key="res0"),
             SparseBasicBlock(16, 16, norm_cfg=norm_cfg, indice_key="res0"),
         )

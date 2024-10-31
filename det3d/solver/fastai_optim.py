@@ -1,12 +1,10 @@
-from collections import Iterable, defaultdict
-from copy import deepcopy
-from itertools import chain
+from collections.abc import Iterable
 
 import torch
 from torch import nn
 from torch._utils import _unflatten_dense_tensors
-from torch.autograd import Variable
 from torch.nn.utils import parameters_to_vector
+
 try:
     from apex.parallel.optimized_sync_batchnorm import SyncBatchNorm
     bn_types = (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d, nn.modules.batchnorm._BatchNorm, SyncBatchNorm)
@@ -96,9 +94,7 @@ def listify(p=None, q=None):
     "Make `p` listy and the same length as `q`."
     if p is None:
         p = []
-    elif isinstance(p, str):
-        p = [p]
-    elif not isinstance(p, Iterable):
+    elif isinstance(p, str) or not isinstance(p, Iterable):
         p = [p]
     n = q if type(q) == int else len(p) if q is None else len(q)
     if len(p) == 1:
@@ -152,7 +148,7 @@ class OptimWrapper:
         )
 
     def __repr__(self) -> str:
-        return f"OptimWrapper over {repr(self.opt)}.\nTrue weight decay: {self.true_wd}"
+        return f"OptimWrapper over {self.opt!r}.\nTrue weight decay: {self.true_wd}"
 
     # Pytorch optimizer methods
     def step(self) -> None:

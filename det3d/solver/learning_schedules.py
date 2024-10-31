@@ -5,10 +5,10 @@ import numpy as np
 from torch.optim.optimizer import Optimizer
 
 
-class _LRSchedulerStep(object):
+class _LRSchedulerStep:
     def __init__(self, optimizer, last_step=-1):
         if not isinstance(optimizer, Optimizer):
-            raise TypeError("{} is not an Optimizer".format(type(optimizer).__name__))
+            raise TypeError(f"{type(optimizer).__name__} is not an Optimizer")
         self.optimizer = optimizer
         if last_step == -1:
             for group in optimizer.param_groups:
@@ -18,7 +18,7 @@ class _LRSchedulerStep(object):
                 if "initial_lr" not in group:
                     raise KeyError(
                         "param 'initial_lr' is not specified "
-                        "in param_groups[{}] when resuming an optimizer".format(i)
+                        f"in param_groups[{i}] when resuming an optimizer"
                     )
         self.base_lrs = list(
             map(lambda group: group["initial_lr"], optimizer.param_groups)

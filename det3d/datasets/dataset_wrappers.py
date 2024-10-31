@@ -20,13 +20,13 @@ class ConcatDataset(_ConcatDataset):
         self.CLASSES = datasets[0].CLASSES
         if hasattr(datasets[0], "flag"):
             flags = []
-            for i in range(0, len(datasets)):
+            for i in range(len(datasets)):
                 flags.append(datasets[i].flag)
             self.flag = np.concatenate(flags)
 
 
 @DATASETS.register_module
-class RepeatDataset(object):
+class RepeatDataset:
     """A wrapper of repeated dataset.
 
     The length of repeated dataset will be `times` larger than the original

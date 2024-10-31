@@ -1,14 +1,12 @@
-from __future__ import division
 import math
 
 import numpy as np
 import torch
-import math
 import torch.distributed as dist
+from torch.utils.data import DistributedSampler as _DistributedSampler
 from torch.utils.data.sampler import Sampler
 
 from det3d.torchie.trainer import get_dist_info
-from torch.utils.data import DistributedSampler as _DistributedSampler
 
 # from torch.utils.data import Sampler
 

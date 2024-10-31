@@ -6,8 +6,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-import fire
-
 
 def _get_info_from_anaconda_info(info, split=":"):
     info = info.strip("\n").replace(" ", "")
@@ -65,7 +63,7 @@ def find_cuda():
                 cuda_home = None
     if cuda_home is None:
         raise RuntimeError(
-            "No CUDA runtime is found, using CUDA_HOME='{}'".format(cuda_home)
+            f"No CUDA runtime is found, using CUDA_HOME='{cuda_home}'"
         )
     return cuda_home
 
@@ -120,7 +118,7 @@ def find_cuda_device_arch():
                 except Exception:
                     return None
         else:
-            cmd = f"{str(device_query_path)} | grep 'CUDA Capability'"
+            cmd = f"{device_query_path!s} | grep 'CUDA Capability'"
             arch = (
                 subprocess.check_output(cmd, shell=True)
                 .decode()
@@ -134,7 +132,7 @@ def find_cuda_device_arch():
         while arch_int > 10:
             try:
                 res = subprocess.check_output(
-                    "nvcc -arch=sm_{}".format(arch_int),
+                    f"nvcc -arch=sm_{arch_int}",
                     shell=True,
                     stderr=subprocess.STDOUT,
                 )

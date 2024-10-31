@@ -4,23 +4,23 @@
     # Licensed under MIT License
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
-import glob, argparse, tqdm, pickle, os 
+import argparse
+import glob
+import os
+import pickle
+from multiprocessing import Pool
 
-import waymo_decoder 
 import tensorflow.compat.v2 as tf
+import tqdm
+import waymo_decoder
 from waymo_open_dataset import dataset_pb2
-
-from multiprocessing import Pool 
 
 tf.enable_v2_behavior()
 
-fnames = None 
+fnames = None
 LIDAR_PATH = None
-ANNO_PATH = None 
+ANNO_PATH = None
 
 def convert(idx):
     global fnames
@@ -32,18 +32,18 @@ def convert(idx):
         decoded_frame = waymo_decoder.decode_frame(frame, frame_id)
         decoded_annos = waymo_decoder.decode_annos(frame, frame_id)
 
-        with open(os.path.join(LIDAR_PATH, 'seq_{}_frame_{}.pkl'.format(idx, frame_id)), 'wb') as f:
+        with open(os.path.join(LIDAR_PATH, f'seq_{idx}_frame_{frame_id}.pkl'), 'wb') as f:
             pickle.dump(decoded_frame, f)
-        
-        with open(os.path.join(ANNO_PATH, 'seq_{}_frame_{}.pkl'.format(idx, frame_id)), 'wb') as f:
+
+        with open(os.path.join(ANNO_PATH, f'seq_{idx}_frame_{frame_id}.pkl'), 'wb') as f:
             pickle.dump(decoded_annos, f)
 
 
 def main(args):
-    global fnames 
+    global fnames
     fnames = sorted(list(glob.glob(args.record_path)))
 
-    print("Number of files {}".format(len(fnames)))
+    print(f"Number of files {len(fnames)}")
 
     with Pool(128) as p: # change according to your cpu
         r = list(tqdm.tqdm(p.imap(convert, range(len(fnames))), total=len(fnames)))
@@ -67,5 +67,5 @@ if __name__ == '__main__':
 
     if not os.path.isdir(ANNO_PATH):
         os.mkdir(ANNO_PATH)
-    
+
     main(args)

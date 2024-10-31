@@ -18,9 +18,7 @@ class ConfigDict(Dict):
             value = super(ConfigDict, self).__getattr__(name)
         except KeyError:
             ex = AttributeError(
-                "'{}' object has no attribute '{}'".format(
-                    self.__class__.__name__, name
-                )
+                f"'{self.__class__.__name__}' object has no attribute '{name}'"
             )
         except Exception as e:
             ex = e
@@ -44,11 +42,11 @@ def add_args(parser, cfg, prefix=""):
         elif isinstance(v, collections_abc.Iterable):
             parser.add_argument("--" + prefix + k, type=type(v[0]), nargs="+")
         else:
-            print("connot parse key {} of type {}".format(prefix + k, type(v)))
+            print(f"connot parse key {prefix + k} of type {type(v)}")
     return parser
 
 
-class Config(object):
+class Config:
     """A facility for config and config files.
 
     It supports common file formats as configs: python/json/yaml. The interface
@@ -96,7 +94,7 @@ class Config(object):
 
             cfg_dict = torchie.load(filename)
         else:
-            raise IOError("Only py/yml/yaml/json type are supported now!")
+            raise OSError("Only py/yml/yaml/json type are supported now!")
         return Config(cfg_dict, filename=filename)
 
     @staticmethod
@@ -117,13 +115,13 @@ class Config(object):
             cfg_dict = dict()
         elif not isinstance(cfg_dict, dict):
             raise TypeError(
-                "cfg_dict must be a dict, but got {}".format(type(cfg_dict))
+                f"cfg_dict must be a dict, but got {type(cfg_dict)}"
             )
 
         super(Config, self).__setattr__("_cfg_dict", ConfigDict(cfg_dict))
         super(Config, self).__setattr__("_filename", filename)
         if filename:
-            with open(filename, "r") as f:
+            with open(filename) as f:
                 super(Config, self).__setattr__("_text", f.read())
         else:
             super(Config, self).__setattr__("_text", "")
@@ -137,7 +135,7 @@ class Config(object):
         return self._text
 
     def __repr__(self):
-        return "Config (path: {}): {}".format(self.filename, self._cfg_dict.__repr__())
+        return f"Config (path: {self.filename}): {self._cfg_dict.__repr__()}"
 
     def __len__(self):
         return len(self._cfg_dict)

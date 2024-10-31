@@ -100,7 +100,7 @@ db_sampler = dict(
     ],
     global_random_rotation_range_per_object=[0, 0],
     rate=1.0,
-) 
+)
 
 train_preprocessor = dict(
     mode="train",
@@ -205,6 +205,6 @@ device_ids = range(8)
 dist_params = dict(backend="nccl", init_method="env://")
 log_level = "INFO"
 work_dir = './work_dirs/{}/'.format(__file__[__file__.rfind('/') + 1:-3])
-load_from = None 
-resume_from = None  
+load_from = None
+resume_from = None
 workflow = [('train', 1)]

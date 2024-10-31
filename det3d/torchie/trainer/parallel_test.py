@@ -1,7 +1,6 @@
 import multiprocessing
 
 import torch
-from det3d import torchie
 
 from .checkpoint import load_checkpoint
 

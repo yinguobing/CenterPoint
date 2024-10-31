@@ -1,11 +1,12 @@
-from pathlib import Path
 
 import numba
 import numpy as np
+
 from det3d.core.bbox.geometry import (
     points_count_convex_polygon_3d_jit,
     points_in_convex_polygon_3d_jit,
 )
+
 try:
     from spconv.utils import rbbox_intersection, rbbox_iou
 except:
@@ -782,7 +783,7 @@ def get_minimum_bounding_box_bv(points, voxel_size, bound, downsample=8, margin=
     min_x = np.maximum(min_x - margin, bound[0])
     min_y = np.maximum(min_y - margin, bound[1])
     return np.array([min_x, min_y, max_x, max_y])
-    
+
 
 def box3d_to_bbox(box3d, rect, Trv2c, P2):
     box3d_to_cam = box_lidar_to_camera(box3d, rect, Trv2c)

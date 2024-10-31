@@ -1,11 +1,10 @@
-import math
-from functools import reduce
 
 import numpy as np
 import torch
 from torch import stack as tstack
+
 try:
-    from det3d.ops.iou3d_nms import iou3d_nms_cuda, iou3d_nms_utils
+    from det3d.ops.iou3d_nms import iou3d_nms_cuda
 except:
     print("iou3d cuda not built. You don't need this if you use circle_nms. Otherwise, refer to the advanced installation part to build this cuda extension")
 
@@ -274,4 +273,4 @@ def rotate_nms_pcdet(boxes, scores, thresh, pre_maxsize=None, post_max_size=None
     if post_max_size is not None:
         selected = selected[:post_max_size]
 
-    return selected 
+    return selected

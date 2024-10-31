@@ -1,17 +1,13 @@
 """The following code is takend from the nuscenes-devkit"""
 
 import copy
-import os.path as osp
-import struct
-from abc import ABC, abstractmethod
-from functools import reduce
-from typing import Tuple, List, Dict
+from typing import List, Tuple
 
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from pyquaternion import Quaternion
-from matplotlib import pyplot as plt 
 
 
 def view_points(points: np.ndarray, view: np.ndarray, normalize: bool) -> np.ndarray:
@@ -321,4 +317,4 @@ def remove_close(points, radius: float) -> None:
     y_filt = np.abs(points[1, :]) < radius
     not_close = np.logical_not(np.logical_and(x_filt, y_filt))
     points = points[:, not_close]
-    return points    
+    return points

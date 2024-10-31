@@ -1,20 +1,10 @@
-import time
 import numpy as np
-import math
-
 import torch
-
 from torch import nn
-from torch.nn import functional as F
-from torchvision.models import resnet
-from torch.nn.modules.batchnorm import _BatchNorm
 
-from det3d.torchie.cnn import constant_init, kaiming_init, xavier_init
-from det3d.torchie.trainer import load_checkpoint
-from det3d.models.utils import Empty, GroupNorm, Sequential
-from det3d.models.utils import change_default_args
+from det3d.models.utils import Sequential
+from det3d.torchie.cnn import xavier_init
 
-from .. import builder
 from ..registry import NECKS
 from ..utils import build_norm_layer
 

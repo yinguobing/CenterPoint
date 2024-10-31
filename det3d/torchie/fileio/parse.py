@@ -13,7 +13,7 @@ def list_from_file(filename, prefix="", offset=0, max_num=0):
     """
     cnt = 0
     item_list = []
-    with open(filename, "r") as f:
+    with open(filename) as f:
         for _ in range(offset):
             f.readline()
         for line in f:
@@ -40,7 +40,7 @@ def dict_from_file(filename, key_type=str):
         dict: The parsed contents.
     """
     mapping = {}
-    with open(filename, "r") as f:
+    with open(filename) as f:
         for line in f:
             items = line.rstrip("\n").split()
             assert len(items) >= 2

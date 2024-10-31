@@ -4,28 +4,26 @@
 # Licensed under the Apache License.
 # ------------------------------------------------------------------------------
 
-from torch import batch_norm
-import torch.nn as nn
-import torch 
-from .roi_head_template import RoIHeadTemplate
-
-from det3d.core import box_torch_ops
+import torch
+from torch import nn
 
 from ..registry import ROI_HEAD
+from .roi_head_template import RoIHeadTemplate
+
 
 @ROI_HEAD.register_module
 class RoIHead(RoIHeadTemplate):
     def __init__(self, input_channels, model_cfg, num_class=1, code_size=7, add_box_param=False, test_cfg=None):
         super().__init__(num_class=num_class, model_cfg=model_cfg)
         self.model_cfg = model_cfg
-        self.test_cfg = test_cfg 
+        self.test_cfg = test_cfg
         self.code_size = code_size
         self.add_box_param = add_box_param
 
         pre_channel = input_channels
 
         shared_fc_list = []
-        for k in range(0, self.model_cfg.SHARED_FC.__len__()):
+        for k in range(self.model_cfg.SHARED_FC.__len__()):
             shared_fc_list.extend([
                 nn.Conv1d(pre_channel, self.model_cfg.SHARED_FC[k], kernel_size=1, bias=False),
                 nn.BatchNorm1d(self.model_cfg.SHARED_FC[k]),
@@ -59,7 +57,7 @@ class RoIHead(RoIHeadTemplate):
             raise NotImplementedError
 
         for m in self.modules():
-            if isinstance(m, nn.Conv2d) or isinstance(m, nn.Conv1d):
+            if isinstance(m, (nn.Conv1d, nn.Conv2d)):
                 if weight_init == 'normal':
                     init_func(m.weight, mean=0, std=0.001)
                 else:
@@ -107,5 +105,5 @@ class RoIHead(RoIHeadTemplate):
             targets_dict['rcnn_reg'] = rcnn_reg
 
             self.forward_ret_dict = targets_dict
-        
-        return batch_dict        
+
+        return batch_dict

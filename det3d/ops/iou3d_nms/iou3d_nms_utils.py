@@ -3,11 +3,10 @@
 Written by Shaoshuai Shi
 All Rights Reserved 2019-2020.
 """
+import numpy as np
 import torch
 
 from . import iou3d_nms_cuda
-import numpy as np 
-
 
 
 def boxes_iou_bev(boxes_a, boxes_b):

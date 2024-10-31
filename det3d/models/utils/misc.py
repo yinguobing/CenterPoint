@@ -1,10 +1,7 @@
-import functools
 import inspect
 import sys
 from collections import OrderedDict
 
-import numba
-import numpy as np
 import torch
 
 # from lib.models.backbone.utils import Registry
@@ -68,7 +65,7 @@ class Sequential(torch.nn.Module):
 
     def __getitem__(self, idx):
         if not (-len(self) <= idx < len(self)):
-            raise IndexError("index {} is out of range".format(idx))
+            raise IndexError(f"index {idx} is out of range")
         if idx < 0:
             idx += len(self)
         it = iter(self._modules.values())

@@ -1,10 +1,8 @@
 # This file contains some config modification function.
 # some functions should be only used for KITTI dataset.
 
-from pathlib import Path
 
 import numpy as np
-from google.protobuf import text_format
 
 
 def change_detection_range(model_config, new_range):

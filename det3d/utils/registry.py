@@ -3,15 +3,13 @@ import inspect
 from det3d import torchie
 
 
-class Registry(object):
+class Registry:
     def __init__(self, name):
         self._name = name
         self._module_dict = dict()
 
     def __repr__(self):
-        format_str = self.__class__.__name__ + "(name={}, items={})".format(
-            self._name, list(self._module_dict.keys())
-        )
+        format_str = self.__class__.__name__ + f"(name={self._name}, items={list(self._module_dict.keys())})"
         return format_str
 
     @property
@@ -32,12 +30,12 @@ class Registry(object):
         """
         if not inspect.isclass(module_class):
             raise TypeError(
-                "module must be a class, but got {}".format(type(module_class))
+                f"module must be a class, but got {type(module_class)}"
             )
         module_name = module_class.__name__
         if module_name in self._module_dict:
             raise KeyError(
-                "{} is already registered in {}".format(module_name, self.name)
+                f"{module_name} is already registered in {self.name}"
             )
         self._module_dict[module_name] = module_class
 
@@ -63,13 +61,13 @@ def build_from_cfg(cfg, registry, default_args=None):
         obj_cls = registry.get(obj_type)
         if obj_cls is None:
             raise KeyError(
-                "{} is not in the {} registry".format(obj_type, registry.name)
+                f"{obj_type} is not in the {registry.name} registry"
             )
     elif inspect.isclass(obj_type):
         obj_cls = obj_type
     else:
         raise TypeError(
-            "type must be a str or valid type, but got {}".format(type(obj_type))
+            f"type must be a str or valid type, but got {type(obj_type)}"
         )
     if default_args is not None:
         for name, value in default_args.items():

@@ -4,6 +4,7 @@ from collections import OrderedDict
 
 import torch
 import torch.distributed as dist
+
 from det3d import torchie
 
 from .base import LoggerHook
@@ -18,7 +19,7 @@ class TextLoggerHook(LoggerHook):
         super(TextLoggerHook, self).before_run(trainer)
         self.start_iter = trainer.iter
         self.json_log_path = osp.join(
-            trainer.work_dir, "{}.log.json".format(trainer.timestamp)
+            trainer.work_dir, f"{trainer.timestamp}.log.json"
         )
 
     def _get_max_memory(self, trainer):
@@ -32,7 +33,7 @@ class TextLoggerHook(LoggerHook):
 
     def _convert_to_precision4(self, val):
         if isinstance(val, float):
-            val = "{:.4f}".format(val)
+            val = f"{val:.4f}"
         elif isinstance(val, list):
             val = [self._convert_to_precision4(v) for v in val]
 
@@ -52,7 +53,7 @@ class TextLoggerHook(LoggerHook):
                 time_sec_avg = self.time_sec_tot / (trainer.iter - self.start_iter + 1)
                 eta_sec = time_sec_avg * (trainer.max_iters - trainer.iter - 1)
                 eta_str = str(datetime.timedelta(seconds=int(eta_sec)))
-                log_str += "eta: {}, ".format(eta_str)
+                log_str += f"eta: {eta_str}, "
                 log_str += "time: {:.3f}, data_time: {:.3f}, transfer_time: {:.3f}, forward_time: {:.3f}, loss_parse_time: {:.3f} ".format(
                     log_dict["time"],
                     log_dict["data_time"],
@@ -94,14 +95,14 @@ class TextLoggerHook(LoggerHook):
                     continue
 
                 if isinstance(val, float):
-                    val = "{:.4f}".format(val)
+                    val = f"{val:.4f}"
 
                 if isinstance(val, list):
                     log_items.append(
-                        "{}: {}".format(name, self._convert_to_precision4(val[idx]))
+                        f"{name}: {self._convert_to_precision4(val[idx])}"
                     )
                 else:
-                    log_items.append("{}: {}".format(name, val))
+                    log_items.append(f"{name}: {val}")
 
             log_str += ", ".join(log_items)
             if idx == (len(class_names) - 1):

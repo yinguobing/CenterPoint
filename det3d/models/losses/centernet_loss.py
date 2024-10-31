@@ -1,7 +1,9 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
+
 from det3d.core.utils.center_utils import _transpose_and_gather_feat
+
 
 class RegLoss(nn.Module):
   '''Regression loss for an output tensor
@@ -13,10 +15,10 @@ class RegLoss(nn.Module):
   '''
   def __init__(self):
     super(RegLoss, self).__init__()
-  
+
   def forward(self, output, mask, ind, target):
     pred = _transpose_and_gather_feat(output, ind)
-    mask = mask.float().unsqueeze(2) 
+    mask = mask.float().unsqueeze(2)
 
     loss = F.l1_loss(pred*mask, target*mask, reduction='none')
     loss = loss / (mask.sum() + 1e-4)

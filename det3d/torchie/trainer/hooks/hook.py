@@ -1,4 +1,4 @@
-class Hook(object):
+class Hook:
     def before_run(self, trainer):
         pass
 

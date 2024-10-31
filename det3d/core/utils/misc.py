@@ -1,8 +1,9 @@
 from functools import partial
 
 import numpy as np
-from det3d import torchie
 from six.moves import map, zip
+
+from det3d import torchie
 
 
 def tensor2imgs(tensor, mean=(0, 0, 0), std=(1, 1, 1), to_rgb=True):

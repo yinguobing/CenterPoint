@@ -1,7 +1,10 @@
-from det3d.core.bbox.box_np_ops import center_to_corner_box3d
-import open3d as o3d
 import argparse
-import pickle 
+import pickle
+
+import open3d as o3d
+
+from det3d.core.bbox.box_np_ops import center_to_corner_box3d
+
 
 def label2color(label):
     colors = [[204/255, 0, 0], [52/255, 101/255, 164/255],
@@ -22,22 +25,22 @@ def corners_to_lines(qs, color=[204/255, 0, 0]):
     """
     idx = [(1,0), (5,4), (2,3), (6,7), (1,2), (5,6), (0,3), (4,7), (1,5), (0,4), (2,6), (3,7)]
     cl = [color for i in range(12)]
-    
+
     line_set = o3d.geometry.LineSet(
         points=o3d.utility.Vector3dVector(qs),
         lines=o3d.utility.Vector2iVector(idx),
     )
     line_set.colors = o3d.utility.Vector3dVector(cl)
-    
+
     return line_set
 
 def plot_boxes(boxes, score_thresh):
-    visuals =[] 
+    visuals =[]
     num_det = boxes['scores'].shape[0]
     for i in range(num_det):
         score = boxes['scores'][i]
         if score < score_thresh:
-            continue 
+            continue
 
         box = boxes['boxes'][i:i+1]
         label = boxes['classes'][i]

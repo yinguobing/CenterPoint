@@ -1,5 +1,5 @@
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 
 
 def conv_ws_2d(

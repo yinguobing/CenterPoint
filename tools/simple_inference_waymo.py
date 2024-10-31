@@ -1,25 +1,24 @@
 # modified from the single_inference.py by @muzi2045
+import argparse
+import os
+import pickle
+
+import numpy as np
+import open3d as o3d
+import torch
 from spconv.utils import VoxelGenerator as VoxelGenerator
-from det3d.datasets.pipelines.loading import read_single_waymo
-from det3d.datasets.pipelines.loading import get_obj
-from det3d.torchie.trainer import load_checkpoint
+from tqdm import tqdm
+
 from det3d.models import build_detector
 from det3d.torchie import Config
-from tqdm import tqdm 
-import numpy as np
-import pickle 
-import open3d as o3d
-import argparse
-import torch
-import time 
-import os 
+from det3d.torchie.trainer import load_checkpoint
 
-voxel_generator = None 
-model = None 
-device = None 
+voxel_generator = None
+model = None
+device = None
 
 def initialize_model(args):
-    global model, voxel_generator  
+    global model, voxel_generator
     cfg = Config.fromfile(args.config)
     model = build_detector(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
     if args.checkpoint is not None:
@@ -32,7 +31,7 @@ def initialize_model(args):
     model = model.cuda()
     model.eval()
 
-    global device 
+    global device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     range = cfg.voxel_generator.range
@@ -45,14 +44,14 @@ def initialize_model(args):
         max_num_points=max_points_in_voxel,
         max_voxels=max_voxel_num
     )
-    return model 
+    return model
 
 def voxelization(points, voxel_generator):
-    voxel_output = voxel_generator.generate(points)  
+    voxel_output = voxel_generator.generate(points)
     voxels, coords, num_points = \
         voxel_output['voxels'], voxel_output['coordinates'], voxel_output['num_points_per_voxel']
 
-    return voxels, coords, num_points  
+    return voxels, coords, num_points
 
 def _process_inputs(points, fp16):
     voxels, coords, num_points = voxel_generator.generate(points)
@@ -77,7 +76,7 @@ def _process_inputs(points, fp16):
             shape = [grid_size]
         )
 
-    return inputs 
+    return inputs
 
 def run_model(points, fp16=False):
     with torch.no_grad():
@@ -97,7 +96,7 @@ def process_example(points, fp16=False):
     assert output['scores'].shape[0] == num_objs
     assert output['classes'].shape[0] == num_objs
 
-    return output    
+    return output
 
 
 if __name__ == '__main__':
@@ -115,9 +114,9 @@ if __name__ == '__main__':
     parser.add_argument('--num_frame', default=-1, type=int)
     args = parser.parse_args()
 
-    print("Please prepare your point cloud in waymo format and save it as a pickle dict with points key into the {}".format(args.input_data_dir))
+    print(f"Please prepare your point cloud in waymo format and save it as a pickle dict with points key into the {args.input_data_dir}")
     print("One point cloud should be saved in one pickle file.")
-    print("Download and save the pretrained model at {}".format(args.checkpoint))
+    print(f"Download and save the pretrained model at {args.checkpoint}")
 
     # Run any user-specified initialization code for their submission.
     model = initialize_model(args)
@@ -125,12 +124,12 @@ if __name__ == '__main__':
     latencies = []
     visual_dicts = []
     pred_dicts = {}
-    counter = 0 
+    counter = 0
     for frame_name in tqdm(sorted(os.listdir(args.input_data_dir))):
         if counter == args.num_frame:
             break
         else:
-            counter += 1 
+            counter += 1
 
         pc_name = os.path.join(args.input_data_dir, frame_name)
         points = pickle.load(open(pc_name, 'rb'))['points']

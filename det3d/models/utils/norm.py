@@ -1,9 +1,10 @@
 import torch
 import torch.distributed as dist
-import torch.nn as nn
-from det3d.utils.dist import dist_common as comm
+from torch import nn
 from torch.autograd.function import Function
 from torch.nn import BatchNorm2d
+
+from det3d.utils.dist import dist_common as comm
 
 
 class AllReduce(Function):
@@ -83,7 +84,7 @@ def build_norm_layer(cfg, num_features, postfix=""):
 
     layer_type = cfg_.pop("type")
     if layer_type not in norm_cfg:
-        raise KeyError("Unrecognized norm type {}".format(layer_type))
+        raise KeyError(f"Unrecognized norm type {layer_type}")
     else:
         abbr, norm_layer = norm_cfg[layer_type]
         if norm_layer is None:

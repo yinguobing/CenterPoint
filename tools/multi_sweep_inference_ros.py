@@ -1,31 +1,22 @@
 
-import rospy
-import ros_numpy
-import numpy as np
-import copy
-import json
-import os
-import sys
-import torch
-import yaml
 import time
-
-from std_msgs.msg import Header
-import sensor_msgs.point_cloud2 as pc2
-from nav_msgs.msg import Odometry
-from sensor_msgs.msg import PointCloud2, PointField
-from jsk_recognition_msgs.msg import BoundingBox, BoundingBoxArray
-from pyquaternion import Quaternion
-
-from det3d import __version__, torchie
-from det3d.models import build_detector
-from det3d.torchie import Config
-from det3d.core.input.voxel_generator import VoxelGenerator
-
-import cupy as cp
 from collections import deque
 from copy import deepcopy
 from functools import reduce
+
+import cupy as cp
+import numpy as np
+import ros_numpy
+import rospy
+import torch
+from jsk_recognition_msgs.msg import BoundingBox, BoundingBoxArray
+from nav_msgs.msg import Odometry
+from pyquaternion import Quaternion
+from sensor_msgs.msg import PointCloud2, PointField
+
+from det3d.core.input.voxel_generator import VoxelGenerator
+from det3d.models import build_detector
+from det3d.torchie import Config
 
 
 def yaw2quaternion(yaw: float) -> Quaternion:
@@ -184,7 +175,7 @@ class Processor_ROS:
             num_points=num_points,
             num_voxels=num_voxels,
             coordinates=coords,
-            shape=[grid_size]  # simulate a batch of one example 
+            shape=[grid_size]  # simulate a batch of one example
         )
         torch.cuda.synchronize()
         t = time.time()
@@ -211,7 +202,7 @@ class Processor_ROS:
         print("get one frame lidar data.")
         self.current_frame["lidar_stamp"] = input_points['stamp']
         self.current_frame["lidar_seq"] = input_points['seq']
-        self.current_frame["points"] = input_points['points'].T   
+        self.current_frame["points"] = input_points['points'].T
         self.lidar_deque.append(deepcopy(self.current_frame))
         if len(self.lidar_deque) == 5:
 
@@ -256,7 +247,7 @@ class Processor_ROS:
                 tmp_pc[3, ...] = self.lidar_deque[i]['points'][3, ...]
                 tmp_pc[4, ...] = ref_timestamp - timestamp
                 all_pc = np.hstack((all_pc, tmp_pc))
-            
+
             all_pc = all_pc.T
             print(f" concate pointcloud shape: {all_pc.shape}")
 
@@ -327,7 +318,7 @@ def rslidar_callback(msg):
     arr_bbox = BoundingBoxArray()
     msg_cloud = ros_numpy.point_cloud2.pointcloud2_to_array(msg)
     np_p = get_xyz_points(msg_cloud, True)
- 
+
     print("  ")
     seq = msg.header.seq
     stamp = msg.header.stamp
@@ -361,7 +352,7 @@ def rslidar_callback(msg):
         # print("total callback time: ", time.time() - t_t)
         arr_bbox.header.frame_id = msg.header.frame_id
         arr_bbox.header.stamp = msg.header.stamp
-        if len(arr_bbox.boxes) is not 0:
+        if len(arr_bbox.boxes) != 0:
             pub_arr_bbox.publish(arr_bbox)
             arr_bbox.boxes = []
         else:

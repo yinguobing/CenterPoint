@@ -1,5 +1,4 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
-import json
 import logging
 import os
 from collections import OrderedDict
@@ -135,7 +134,7 @@ def finetune_load_state_dict(model, loaded_state_dict, logger=None):
     model.load_state_dict(model_state_dict)
 
 
-class Checkpointer(object):
+class Checkpointer:
     def __init__(
         self,
         model,
@@ -174,8 +173,8 @@ class Checkpointer(object):
             data["scheduler"] = self.scheduler.state_dict()
         data.update(kwargs)
 
-        save_file = os.path.join(self.save_dir, "{}.pth".format(name))
-        self.logger.info("Saving checkpoint to {}".format(save_file))
+        save_file = os.path.join(self.save_dir, f"{name}.pth")
+        self.logger.info(f"Saving checkpoint to {save_file}")
         torch.save(data, save_file)
         self.tag_last_checkpoint(save_file)
 
@@ -190,14 +189,14 @@ class Checkpointer(object):
             # no checkpoint could be found
             self.logger.info("No checkpoint found. Initializing model from scratch")
             return {}
-        self.logger.info("Loading checkpoint from {}".format(f))
+        self.logger.info(f"Loading checkpoint from {f}")
         checkpoint = self._load_file(f)
         self._load_model(checkpoint)
         if "optimizer" in checkpoint and self.optimizer:
-            self.logger.info("Loading optimizer from {}".format(f))
+            self.logger.info(f"Loading optimizer from {f}")
             self.optimizer.load_state_dict(checkpoint.pop("optimizer"))
         if "scheduler" in checkpoint and self.scheduler:
-            self.logger.info("Loading scheduler from {}".format(f))
+            self.logger.info(f"Loading scheduler from {f}")
             self.scheduler.load_state_dict(checkpoint.pop("scheduler"))
 
         # return any further checkpoint data
@@ -209,7 +208,7 @@ class Checkpointer(object):
             self.finetune = True
             f = self.get_checkpoint_file(ckpt_path)
         assert f is not None, "Finetune should provide a valid ckpt path"
-        self.logger.info("Loading pretrained model from {}".format(f))
+        self.logger.info(f"Loading pretrained model from {f}")
         checkpoint = self._load_file(f)
         self._load_model(checkpoint)
 
@@ -220,10 +219,10 @@ class Checkpointer(object):
     def get_checkpoint_file(self, save_dir):
         save_file = os.path.join(save_dir, "last_checkpoint")
         try:
-            with open(save_file, "r") as f:
+            with open(save_file) as f:
                 last_saved = f.read()
                 last_saved = last_saved.strip()
-        except IOError:
+        except OSError:
             # if file doesn't exist, maybe because it has just been
             # deleted by a separate process
             last_saved = ""

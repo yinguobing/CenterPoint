@@ -1,19 +1,14 @@
 import abc
-import sys
-import time
 from collections import OrderedDict
-from functools import reduce
 
 import numba
 import numpy as np
 
 from det3d.core.bbox import box_np_ops
 from det3d.core.bbox.geometry import (
-    is_line_segment_intersection_jit,
     points_in_convex_polygon_3d_jit,
     points_in_convex_polygon_jit,
 )
-import copy
 
 
 class BatchSampler:
@@ -654,19 +649,18 @@ def noise_per_object_v3_(
                 group_nums,
                 global_rot_noises,
             )
+    elif not enable_grot:
+        selected_noise = noise_per_box(
+            gt_boxes[:, [0, 1, 3, 4, 6]], valid_mask, loc_noises, rot_noises
+        )
     else:
-        if not enable_grot:
-            selected_noise = noise_per_box(
-                gt_boxes[:, [0, 1, 3, 4, 6]], valid_mask, loc_noises, rot_noises
-            )
-        else:
-            selected_noise = noise_per_box_v2_(
-                gt_boxes[:, [0, 1, 3, 4, 6]],
-                valid_mask,
-                loc_noises,
-                rot_noises,
-                global_rot_noises,
-            )
+        selected_noise = noise_per_box_v2_(
+            gt_boxes[:, [0, 1, 3, 4, 6]],
+            valid_mask,
+            loc_noises,
+            rot_noises,
+            global_rot_noises,
+        )
     loc_transforms = _select_transform(loc_noises, selected_noise)
     rot_transforms = _select_transform(rot_noises, selected_noise)
     surfaces = box_np_ops.corner_to_surfaces_3d_jit(gt_box_corners)
@@ -801,7 +795,7 @@ def random_flip(gt_boxes, points, probability=0.5):
     return gt_boxes, points
 
 def random_flip_both(gt_boxes, points, probability=0.5, flip_coor=None):
-    # x flip 
+    # x flip
     enable = np.random.choice(
         [False, True], replace=False, p=[1 - probability, probability]
     )
@@ -811,8 +805,8 @@ def random_flip_both(gt_boxes, points, probability=0.5, flip_coor=None):
         points[:, 1] = -points[:, 1]
         if gt_boxes.shape[1] > 7:  # y axis: x, y, z, w, h, l, vx, vy, r
             gt_boxes[:, 7] = -gt_boxes[:, 7]
-    
-    # y flip 
+
+    # y flip
     enable = np.random.choice(
         [False, True], replace=False, p=[1 - probability, probability]
     )
@@ -824,11 +818,11 @@ def random_flip_both(gt_boxes, points, probability=0.5, flip_coor=None):
             gt_boxes[:, 0] = flip_coor * 2 - gt_boxes[:, 0]
             points[:, 0] = flip_coor * 2 - points[:, 0]
 
-        gt_boxes[:, -1] = -gt_boxes[:, -1] + 2*np.pi  # TODO: CHECK THIS 
-        
+        gt_boxes[:, -1] = -gt_boxes[:, -1] + 2*np.pi  # TODO: CHECK THIS
+
         if gt_boxes.shape[1] > 7:  # y axis: x, y, z, w, h, l, vx, vy, r
             gt_boxes[:, 6] = -gt_boxes[:, 6]
-    
+
     return gt_boxes, points
 
 

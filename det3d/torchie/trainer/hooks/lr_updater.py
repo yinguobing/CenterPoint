@@ -1,8 +1,5 @@
-from __future__ import division
 
 from math import cos, pi
-
-from det3d.solver import learning_schedules_fastai as lsf
 
 from .hook import Hook
 
@@ -14,8 +11,8 @@ class LrUpdaterHook(Hook):
         if warmup is not None:
             if warmup not in ["constant", "linear", "exp"]:
                 raise ValueError(
-                    '"{}" is not a supported type for warming up, valid types'
-                    ' are "constant" and "linear"'.format(warmup)
+                    f'"{warmup}" is not a supported type for warming up, valid types'
+                    ' are "constant" and "linear"'
                 )
 
         if warmup is not None:

@@ -193,7 +193,7 @@ data = dict(
         type=dataset_type,
         root_path=data_root,
         info_path=test_anno,
-        ann_file=test_anno, 
+        ann_file=test_anno,
         test_mode=True,
         nsweeps=nsweeps,
         class_names=class_names,
@@ -229,5 +229,5 @@ dist_params = dict(backend="nccl", init_method="env://")
 log_level = "INFO"
 work_dir = './work_dirs/{}/'.format(__file__[__file__.rfind('/') + 1:-3])
 load_from = None
-resume_from = None 
+resume_from = None
 workflow = [('train', 1)]

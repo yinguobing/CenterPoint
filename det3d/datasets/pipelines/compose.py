@@ -1,18 +1,19 @@
 import collections
 
 from det3d.utils import build_from_cfg
+
 from ..registry import PIPELINES
 
 
 @PIPELINES.register_module
-class Compose(object):
+class Compose:
     def __init__(self, transforms):
         assert isinstance(transforms, collections.abc.Sequence)
         self.transforms = []
         for transform in transforms:
             if isinstance(transform, dict):
                 if transform['type'] == 'Empty':
-                    continue 
+                    continue
                 transform = build_from_cfg(transform, PIPELINES)
                 self.transforms.append(transform)
             elif callable(transform):
@@ -31,7 +32,7 @@ class Compose(object):
         format_string = self.__class__.__name__ + "("
         for t in self.transforms:
             format_string += "\n"
-            format_string += "    {0}".format(t)
+            format_string += f"    {t}"
         format_string += "\n)"
         return format_string
 

@@ -1,11 +1,10 @@
-import os.path as osp
 from pathlib import Path
 
 import numpy as np
 from torch.utils.data import Dataset
 
-from .registry import DATASETS
 from .pipelines import Compose
+from .registry import DATASETS
 
 
 @DATASETS.register_module

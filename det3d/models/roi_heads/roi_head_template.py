@@ -6,10 +6,13 @@
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
+
 from det3d.core.bbox import box_torch_ops
+
 from .target_assigner.proposal_target_layer import ProposalTargetLayer
+
 
 def limit_period(val, offset=0.5, period=np.pi):
     return val - torch.floor(val / period + offset) * period
@@ -27,7 +30,7 @@ class RoIHeadTemplate(nn.Module):
     def make_fc_layers(self, input_channels, output_channels, fc_list):
         fc_layers = []
         pre_channel = input_channels
-        for k in range(0, fc_list.__len__()):
+        for k in range(fc_list.__len__()):
             fc_layers.extend([
                 nn.Conv1d(pre_channel, fc_list[k], kernel_size=1, bias=False),
                 nn.BatchNorm1d(fc_list[k]),
@@ -60,7 +63,7 @@ class RoIHeadTemplate(nn.Module):
 
         if rois.shape[-1] == 9:
             # rotate velocity
-            gt_of_rois[:, :, 7:-1] = gt_of_rois[:, :, 7:-1] - rois[:, :, 7:]    
+            gt_of_rois[:, :, 7:-1] = gt_of_rois[:, :, 7:-1] - rois[:, :, 7:]
 
             """
             roi_vel = gt_of_rois[:, :, 7:-1]
@@ -179,5 +182,5 @@ class RoIHeadTemplate(nn.Module):
 
         batch_box_preds[:, 0:3] += roi_xyz
         batch_box_preds = batch_box_preds.view(batch_size, -1, code_size)
-        
+
         return batch_cls_preds, batch_box_preds

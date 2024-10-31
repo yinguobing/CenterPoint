@@ -1,27 +1,24 @@
-import sys
-import pickle
 import json
-import random
 import operator
+import pickle
+import random
+from pathlib import Path
+
 import numpy as np
 
-from functools import reduce
-from pathlib import Path
-from copy import deepcopy
-
 try:
-    from nuscenes.nuscenes import NuScenes
     from nuscenes.eval.detection.config import config_factory
+    from nuscenes.nuscenes import NuScenes
 except:
     print("nuScenes devkit not found!")
 
 from det3d.datasets.custom import PointCloudDataset
 from det3d.datasets.nuscenes.nusc_common import (
-    general_to_detection,
-    cls_attr_dist,
-    _second_det_to_nusc_box,
     _lidar_nusc_box_to_global,
-    eval_main
+    _second_det_to_nusc_box,
+    cls_attr_dist,
+    eval_main,
+    general_to_detection,
 )
 from det3d.datasets.registry import DATASETS
 
@@ -43,7 +40,7 @@ class NuScenesDataset(PointCloudDataset):
         load_interval=1,
         **kwargs,
     ):
-        self.load_interval = load_interval 
+        self.load_interval = load_interval
         super(NuScenesDataset, self).__init__(
             root_path, info_path, pipeline, test_mode=test_mode, class_names=class_names
         )
@@ -63,7 +60,7 @@ class NuScenesDataset(PointCloudDataset):
 
         self.virtual = kwargs.get('virtual', False)
         if self.virtual:
-            self._num_point_features = 16 
+            self._num_point_features = 16
 
         self.version = version
         self.eval_version = "detection_cvpr_2019"
@@ -111,13 +108,12 @@ class NuScenesDataset(PointCloudDataset):
             _cls_dist = {
                 k: len(v) / len(self._nusc_infos) for k, v in _cls_infos.items()
             }
+        elif isinstance(_nusc_infos_all, dict):
+            self._nusc_infos = []
+            for v in _nusc_infos_all.values():
+                self._nusc_infos.extend(v)
         else:
-            if isinstance(_nusc_infos_all, dict):
-                self._nusc_infos = []
-                for v in _nusc_infos_all.values():
-                    self._nusc_infos.extend(v)
-            else:
-                self._nusc_infos = _nusc_infos_all
+            self._nusc_infos = _nusc_infos_all
 
     def __len__(self):
 
@@ -179,7 +175,7 @@ class NuScenesDataset(PointCloudDataset):
             "calib": None,
             "cam": {},
             "mode": "val" if self.test_mode else "train",
-            "virtual": self.virtual 
+            "virtual": self.virtual
         }
 
         data, _ = self.pipeline(res, info)
@@ -247,13 +243,12 @@ class NuScenesDataset(PointCloudDataset):
                         attr = "cycle.with_rider"
                     else:
                         attr = None
+                elif name in ["pedestrian"]:
+                    attr = "pedestrian.standing"
+                elif name in ["bus"]:
+                    attr = "vehicle.stopped"
                 else:
-                    if name in ["pedestrian"]:
-                        attr = "pedestrian.standing"
-                    elif name in ["bus"]:
-                        attr = "vehicle.stopped"
-                    else:
-                        attr = None
+                    attr = None
 
                 nusc_anno = {
                     "sample_token": det["metadata"]["token"],
@@ -296,7 +291,7 @@ class NuScenesDataset(PointCloudDataset):
                 output_dir,
             )
 
-            with open(Path(output_dir) / "metrics_summary.json", "r") as f:
+            with open(Path(output_dir) / "metrics_summary.json") as f:
                 metrics = json.load(f)
 
             detail = {}

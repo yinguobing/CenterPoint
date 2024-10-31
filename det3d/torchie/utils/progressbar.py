@@ -5,7 +5,7 @@ from .misc import collections_abc
 from .timer import Timer
 
 
-class ProgressBar(object):
+class ProgressBar:
     """A progress bar which can print the progress"""
 
     def __init__(self, task_num=0, bar_width=50, start=True):
@@ -25,9 +25,9 @@ class ProgressBar(object):
         max_bar_width = min(int(terminal_width * 0.6), terminal_width - 50)
         if max_bar_width < 10:
             print(
-                "terminal width is too small ({}), please consider "
+                f"terminal width is too small ({terminal_width}), please consider "
                 "widen the terminal for better progressbar "
-                "visualization".format(terminal_width)
+                "visualization"
             )
             max_bar_width = 10
         return max_bar_width
@@ -54,20 +54,11 @@ class ProgressBar(object):
             mark_width = int(self.bar_width * percentage)
             bar_chars = ">" * mark_width + " " * (self.bar_width - mark_width)
             sys.stdout.write(
-                "\r[{}] {}/{}, {:.1f} task/s, elapsed: {}s, ETA: {:5}s".format(
-                    bar_chars,
-                    self.completed,
-                    self.task_num,
-                    fps,
-                    int(elapsed + 0.5),
-                    eta,
-                )
+                f"\r[{bar_chars}] {self.completed}/{self.task_num}, {fps:.1f} task/s, elapsed: {int(elapsed + 0.5)}s, ETA: {eta:5}s"
             )
         else:
             sys.stdout.write(
-                "completed: {}, elapsed: {}s, {:.1f} tasks/s".format(
-                    self.completed, int(elapsed + 0.5), fps
-                )
+                f"completed: {self.completed}, elapsed: {int(elapsed + 0.5)}s, {fps:.1f} tasks/s"
             )
         sys.stdout.flush()
 

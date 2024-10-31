@@ -1,6 +1,6 @@
 import logging
 
-import torch.nn as nn
+from torch import nn
 
 from ..trainer import load_checkpoint
 from .weight_init import constant_init, kaiming_init, normal_init
@@ -68,7 +68,7 @@ class VGG(nn.Module):
     ):
         super(VGG, self).__init__()
         if depth not in self.arch_settings:
-            raise KeyError("invalid depth {} for vgg".format(depth))
+            raise KeyError(f"invalid depth {depth} for vgg")
         assert num_stages >= 1 and num_stages <= 5
         stage_blocks = self.arch_settings[depth]
         self.stage_blocks = stage_blocks[:num_stages]

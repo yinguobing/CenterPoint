@@ -6,7 +6,7 @@
 
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn
 
 from ....ops.iou3d_nms.iou3d_nms_utils import boxes_iou3d_gpu
 
@@ -49,7 +49,7 @@ class ProposalTargetLayer(nn.Module):
                           (batch_roi_ious < self.roi_sampler_cfg.CLS_FG_THRESH)
             batch_cls_labels[ignore_mask > 0] = -1
         elif self.roi_sampler_cfg.CLS_SCORE_TYPE == 'roi_iou':
-            # padding_mask = (torch.isclose(batch_rois.sum(dim=-1), batch_rois.new_zeros(1))) 
+            # padding_mask = (torch.isclose(batch_rois.sum(dim=-1), batch_rois.new_zeros(1)))
 
             iou_bg_thresh = self.roi_sampler_cfg.CLS_BG_THRESH
             iou_fg_thresh = self.roi_sampler_cfg.CLS_FG_THRESH
@@ -60,7 +60,7 @@ class ProposalTargetLayer(nn.Module):
             batch_cls_labels = (fg_mask > 0).float()
             batch_cls_labels[interval_mask] = \
                 (batch_roi_ious[interval_mask] - iou_bg_thresh) / (iou_fg_thresh - iou_bg_thresh)
-            # batch_cls_labels[padding_mask > 0] = -1 
+            # batch_cls_labels[padding_mask > 0] = -1
         else:
             raise NotImplementedError
 
@@ -96,7 +96,7 @@ class ProposalTargetLayer(nn.Module):
         batch_roi_ious = rois.new_zeros(batch_size, self.roi_sampler_cfg.ROI_PER_IMAGE)
         batch_roi_scores = rois.new_zeros(batch_size, self.roi_sampler_cfg.ROI_PER_IMAGE)
         batch_roi_labels = rois.new_zeros((batch_size, self.roi_sampler_cfg.ROI_PER_IMAGE), dtype=torch.long)
-        batch_roi_features = roi_features.new_zeros(batch_size, self.roi_sampler_cfg.ROI_PER_IMAGE, 
+        batch_roi_features = roi_features.new_zeros(batch_size, self.roi_sampler_cfg.ROI_PER_IMAGE,
             roi_features.shape[-1])
 
         for index in range(batch_size):
@@ -135,8 +135,8 @@ class ProposalTargetLayer(nn.Module):
         fg_rois_per_image = int(np.round(self.roi_sampler_cfg.FG_RATIO * self.roi_sampler_cfg.ROI_PER_IMAGE))
         fg_thresh = min(self.roi_sampler_cfg.REG_FG_THRESH, self.roi_sampler_cfg.CLS_FG_THRESH)
 
-        fg_inds = ((max_overlaps >= fg_thresh)).nonzero().view(-1)
-        easy_bg_inds = ((max_overlaps < self.roi_sampler_cfg.CLS_BG_THRESH_LO)).nonzero().view(-1)
+        fg_inds = (max_overlaps >= fg_thresh).nonzero().view(-1)
+        easy_bg_inds = (max_overlaps < self.roi_sampler_cfg.CLS_BG_THRESH_LO).nonzero().view(-1)
         hard_bg_inds = ((max_overlaps < self.roi_sampler_cfg.REG_FG_THRESH) &
                 (max_overlaps >= self.roi_sampler_cfg.CLS_BG_THRESH_LO)).nonzero().view(-1)
 

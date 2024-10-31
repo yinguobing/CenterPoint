@@ -1,9 +1,9 @@
+import logging
+
 import torch
-import torch.distributed as dist
 from torch import nn
-from torch.autograd.function import Function
 from torch.nn import functional as F
-import logging 
+
 
 class FrozenBatchNorm2d(nn.Module):
     """
@@ -78,7 +78,7 @@ class FrozenBatchNorm2d(nn.Module):
         )
 
     def __repr__(self):
-        return "FrozenBatchNorm2d(num_features={}, eps={})".format(self.num_features, self.eps)
+        return f"FrozenBatchNorm2d(num_features={self.num_features}, eps={self.eps})"
 
     @classmethod
     def convert_frozen_batchnorm(cls, module):

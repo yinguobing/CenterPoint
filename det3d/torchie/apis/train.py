@@ -1,7 +1,6 @@
-from __future__ import division
 
 import re
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 from functools import partial
 
 try:
@@ -9,18 +8,17 @@ try:
 except:
     print("No APEX!")
 
-import numpy as np
 import torch
+from torch import nn
+from torch.nn.parallel import DistributedDataParallel
+
 from det3d.builder import _create_learning_rate_scheduler
 
 # from det3d.datasets.kitti.eval_hooks import KittiDistEvalmAPHook, KittiEvalmAPHookV2
 from det3d.core import DistOptimizerHook
-from det3d.datasets import DATASETS, build_dataloader
+from det3d.datasets import build_dataloader
 from det3d.solver.fastai_optim import OptimWrapper
 from det3d.torchie.trainer import DistSamplerSeedHook, Trainer, obj_from_dict
-from det3d.utils.print_utils import metric_to_str
-from torch import nn
-from torch.nn.parallel import DistributedDataParallel
 
 from .env import get_root_logger
 
@@ -65,7 +63,7 @@ def parse_losses(losses):
         elif isinstance(loss_value, list):
             log_vars[loss_name] = sum(_loss.mean() for _loss in loss_value)
         else:
-            raise TypeError("{} is not a tensor or list of tensors".format(loss_name))
+            raise TypeError(f"{loss_name} is not a tensor or list of tensors")
 
     loss = sum(_value for _key, _value in log_vars.items() if "loss" in _key)
 
@@ -119,14 +117,14 @@ def batch_processor_ensemble(model1, model2, data, train_mode, **kwargs):
     else:
         device = None
 
-    assert train_mode is False 
+    assert train_mode is False
 
     example = example_to_device(data, device, non_blocking=False)
     del data
 
     preds_dicts1 = model1.pred_hm(example)
     preds_dicts2 = model2.pred_hm(example)
-    
+
     num_task = len(preds_dicts1)
 
     merge_list = []
@@ -141,7 +139,7 @@ def batch_processor_ensemble(model1, model2, data, train_mode, **kwargs):
 
         merge_list.append(preds_dict1)
 
-    # now get the final prediciton 
+    # now get the final prediciton
     return model1.pred_result(example, merge_list)
 
 
@@ -277,7 +275,7 @@ def train_detector(model, dataset, cfg, distributed=False, validate=False, logge
         optimizer = build_optimizer(model, cfg.optimizer)
         lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg.drop_step, gamma=.1)
         # lr_scheduler = None
-        cfg.lr_config = None 
+        cfg.lr_config = None
 
     # put model on gpus
     if distributed:

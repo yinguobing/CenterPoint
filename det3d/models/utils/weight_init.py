@@ -1,5 +1,5 @@
 import numpy as np
-import torch.nn as nn
+from torch import nn
 
 
 def xavier_init(module, gain=1, bias=0, distribution="normal"):

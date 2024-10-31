@@ -1,13 +1,11 @@
 import numpy as np
 
-from det3d.core.bbox import box_np_ops
-from det3d.core.sampler import preprocess as prep
 from det3d.builder import build_dbsampler
-
+from det3d.core.bbox import box_np_ops
 from det3d.core.input.voxel_generator import VoxelGenerator
-from det3d.core.utils.center_utils import (
-    draw_umich_gaussian, gaussian_radius
-)
+from det3d.core.sampler import preprocess as prep
+from det3d.core.utils.center_utils import draw_umich_gaussian, gaussian_radius
+
 from ..registry import PIPELINES
 
 
@@ -25,11 +23,11 @@ def drop_arrays_by_name(gt_names, used_classes):
     return inds
 
 @PIPELINES.register_module
-class Preprocess(object):
+class Preprocess:
     def __init__(self, cfg=None, **kwargs):
         self.shuffle_points = cfg.shuffle_points
         self.min_points_in_gt = cfg.get("min_points_in_gt", -1)
-        
+
         self.mode = cfg.mode
         if self.mode == "train":
             self.global_rotation_noise = cfg.global_rot_noise
@@ -39,8 +37,8 @@ class Preprocess(object):
             if cfg.db_sampler != None:
                 self.db_sampler = build_dbsampler(cfg.db_sampler)
             else:
-                self.db_sampler = None 
-                
+                self.db_sampler = None
+
             self.npoints = cfg.get("npoints", -1)
 
         self.no_augmentation = cfg.get('no_augmentation', False)
@@ -124,7 +122,7 @@ class Preprocess(object):
             gt_dict["gt_classes"] = gt_classes
 
             gt_dict["gt_boxes"], points = prep.random_flip_both(gt_dict["gt_boxes"], points)
-            
+
             gt_dict["gt_boxes"], points = prep.global_rotation(
                 gt_dict["gt_boxes"], points, rotation=self.global_rotation_noise
             )
@@ -159,7 +157,7 @@ class Preprocess(object):
 
 
 @PIPELINES.register_module
-class Voxelization(object):
+class Voxelization:
     def __init__(self, **kwargs):
         cfg = kwargs.get("cfg", None)
         self.range = cfg.range
@@ -193,7 +191,7 @@ class Voxelization(object):
             max_voxels = self.max_voxel_num[1]
 
         voxels, coordinates, num_points = self.voxel_generator.generate(
-            res["lidar"]["points"], max_voxels=max_voxels 
+            res["lidar"]["points"], max_voxels=max_voxels
         )
         num_voxels = np.array([voxels.shape[0]], dtype=np.int64)
 
@@ -253,25 +251,25 @@ class Voxelization(object):
                 shape=grid_size,
                 range=pc_range,
                 size=voxel_size
-            )            
+            )
 
         return res, info
 
 def flatten(box):
     return np.concatenate(box, axis=0)
 
-def merge_multi_group_label(gt_classes, num_classes_by_task): 
+def merge_multi_group_label(gt_classes, num_classes_by_task):
     num_task = len(gt_classes)
-    flag = 0 
+    flag = 0
 
     for i in range(num_task):
-        gt_classes[i] += flag 
+        gt_classes[i] += flag
         flag += num_classes_by_task[i]
 
     return flatten(gt_classes)
 
 @PIPELINES.register_module
-class AssignLabel(object):
+class AssignLabel:
     def __init__(self, **kwargs):
         """Return CenterNet training labels like heatmap, height, offset"""
         assigner_cfg = kwargs["cfg"]
@@ -293,7 +291,7 @@ class AssignLabel(object):
             # Calculate output featuremap size
             if 'voxels' in res['lidar']:
                 # Calculate output featuremap size
-                grid_size = res["lidar"]["voxels"]["shape"] 
+                grid_size = res["lidar"]["voxels"]["shape"]
                 pc_range = res["lidar"]["voxels"]["range"]
                 voxel_size = res["lidar"]["voxels"]["size"]
                 feature_map_size = grid_size[:2] // self.out_size_factor
@@ -363,7 +361,7 @@ class AssignLabel(object):
                     # [reg, hei, dim, vx, vy, rots, rotc]
                     anno_box = np.zeros((max_objs, 10), dtype=np.float32)
                 elif res['type'] == 'WaymoDataset':
-                    anno_box = np.zeros((max_objs, 10), dtype=np.float32) 
+                    anno_box = np.zeros((max_objs, 10), dtype=np.float32)
                 else:
                     raise NotImplementedError("Only Support nuScene for Now!")
 
@@ -371,7 +369,7 @@ class AssignLabel(object):
                 mask = np.zeros((max_objs), dtype=np.uint8)
                 cat = np.zeros((max_objs), dtype=np.int64)
 
-                num_objs = min(gt_dict['gt_boxes'][idx].shape[0], max_objs)  
+                num_objs = min(gt_dict['gt_boxes'][idx].shape[0], max_objs)
 
                 for k in range(num_objs):
                     cls_id = gt_dict['gt_classes'][idx][k] - 1
@@ -383,7 +381,7 @@ class AssignLabel(object):
                         radius = gaussian_radius((l, w), min_overlap=self.gaussian_overlap)
                         radius = max(self._min_radius, int(radius))
 
-                        # be really careful for the coordinate system of your box annotation. 
+                        # be really careful for the coordinate system of your box annotation.
                         x, y, z = gt_dict['gt_boxes'][idx][k][0], gt_dict['gt_boxes'][idx][k][1], \
                                   gt_dict['gt_boxes'][idx][k][2]
 
@@ -391,12 +389,12 @@ class AssignLabel(object):
                                          (y - pc_range[1]) / voxel_size[1] / self.out_size_factor
 
                         ct = np.array(
-                            [coor_x, coor_y], dtype=np.float32)  
+                            [coor_x, coor_y], dtype=np.float32)
                         ct_int = ct.astype(np.int32)
 
                         # throw out not in range objects to avoid out of array area when creating the heatmap
                         if not (0 <= ct_int[0] < feature_map_size[0] and 0 <= ct_int[1] < feature_map_size[1]):
-                            continue 
+                            continue
 
                         draw_gaussian(hm[cls_id], ct, radius)
 
@@ -407,7 +405,7 @@ class AssignLabel(object):
                         ind[new_idx] = y * feature_map_size[0] + x
                         mask[new_idx] = 1
 
-                        if res['type'] == 'NuScenesDataset': 
+                        if res['type'] == 'NuScenesDataset':
                             vx, vy = gt_dict['gt_boxes'][idx][k][6:8]
                             rot = gt_dict['gt_boxes'][idx][k][8]
                             anno_box[new_idx] = np.concatenate(
@@ -428,18 +426,16 @@ class AssignLabel(object):
                 inds.append(ind)
                 cats.append(cat)
 
-            # used for two stage code 
+            # used for two stage code
             boxes = flatten(gt_dict['gt_boxes'])
             classes = merge_multi_group_label(gt_dict['gt_classes'], num_classes_by_task)
 
-            if res["type"] == "NuScenesDataset":
-                gt_boxes_and_cls = np.zeros((max_objs, 10), dtype=np.float32)
-            elif res['type'] == "WaymoDataset":
+            if res["type"] == "NuScenesDataset" or res['type'] == "WaymoDataset":
                 gt_boxes_and_cls = np.zeros((max_objs, 10), dtype=np.float32)
             else:
-                raise NotImplementedError()
+                raise NotImplementedError
 
-            boxes_and_cls = np.concatenate((boxes, 
+            boxes_and_cls = np.concatenate((boxes,
                 classes.reshape(-1, 1).astype(np.float32)), axis=1)
             num_obj = len(boxes_and_cls)
             assert num_obj <= max_objs

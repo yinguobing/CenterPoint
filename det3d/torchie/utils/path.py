@@ -38,9 +38,8 @@ def mkdir_or_exist(dir_name, mode=0o777):
     dir_name = osp.expanduser(dir_name)
     if six.PY3:
         os.makedirs(dir_name, mode=mode, exist_ok=True)
-    else:
-        if not osp.isdir(dir_name):
-            os.makedirs(dir_name, mode=mode)
+    elif not osp.isdir(dir_name):
+        os.makedirs(dir_name, mode=mode)
 
 
 def symlink(src, dst, overwrite=True, **kwargs):
@@ -54,9 +53,7 @@ def _scandir_py35(dir_path, suffix=None):
         if not entry.is_file():
             continue
         filename = entry.name
-        if suffix is None:
-            yield filename
-        elif filename.endswith(suffix):
+        if suffix is None or filename.endswith(suffix):
             yield filename
 
 
@@ -64,9 +61,7 @@ def _scandir_py(dir_path, suffix=None):
     for filename in os.listdir(dir_path):
         if not osp.isfile(osp.join(dir_path, filename)):
             continue
-        if suffix is None:
-            yield filename
-        elif filename.endswith(suffix):
+        if suffix is None or filename.endswith(suffix):
             yield filename
 
 

@@ -55,14 +55,14 @@ def import_file(path, name: str = None, add_to_sys=True, disable_warning=False):
     spec.loader.exec_module(module)
     if not disable_warning:
         logger.warning(
-            (
+
                 f"Failed to perform regular import for file {path}. "
                 "this means this file isn't in any folder in PYTHONPATH "
                 "or don't have __init__.py in that project. "
                 "directly file import may fail and some reflecting features are "
                 "disabled even if import succeed. please add your project to PYTHONPATH "
                 "or add __init__.py to ensure this file can be regularly imported. "
-            )
+
         )
 
     if add_to_sys:  # this will enable find objects defined in a file.

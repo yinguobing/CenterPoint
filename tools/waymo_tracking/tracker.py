@@ -1,10 +1,7 @@
-import numpy as np
 import copy
-import copy 
-import importlib
-import sys 
 
 import numpy as np
+
 
 def greedy_assignment(dist):
   matched_indices = []
@@ -24,17 +21,17 @@ WAYMO_TRACKING_NAMES = [
     'CYCLIST'
 ]
 
-class PubTracker(object):
+class PubTracker:
   def __init__(self, max_age=0, max_dist={}, score_thresh=0.1):
     self.max_age = max_age
 
-    self.WAYMO_CLS_VELOCITY_ERROR = max_dist 
+    self.WAYMO_CLS_VELOCITY_ERROR = max_dist
 
     self.WAYMO_TRACKING_NAMES = WAYMO_TRACKING_NAMES
-    self.score_thresh = score_thresh 
+    self.score_thresh = score_thresh
 
     self.reset()
-  
+
   def reset(self):
     self.id_count = 0
     self.tracks = []
@@ -46,10 +43,10 @@ class PubTracker(object):
     else:
       temp = []
       for det in results:
-        # filter out classes not evaluated for tracking 
+        # filter out classes not evaluated for tracking
         if det['detection_name'] not in self.WAYMO_TRACKING_NAMES:
           print("filter {}".format(det['detection_name']))
-          continue 
+          continue
 
         det['ct'] = np.array(det['translation'][:2])
         det['tracking'] = np.array(det['velocity'][:2]) * -1 *  time_lag
@@ -61,14 +58,14 @@ class PubTracker(object):
     N = len(results)
     M = len(self.tracks)
 
-    # N X 2 
+    # N X 2
     if 'tracking' in results[0]:
       dets = np.array(
       [ det['ct'] + det['tracking'].astype(np.float32)
        for det in results], np.float32)
     else:
       dets = np.array(
-        [det['ct'] for det in results], np.float32) 
+        [det['ct'] for det in results], np.float32)
 
     item_cat = np.array([item['label_preds'] for item in results], np.int32) # N
     track_cat = np.array([track['label_preds'] for track in self.tracks], np.int32) # M
@@ -93,17 +90,17 @@ class PubTracker(object):
       matched_indices = np.array([], np.int32).reshape(-1, 2)
 
     unmatched_dets = [d for d in range(dets.shape[0]) \
-      if not (d in matched_indices[:, 0])]
+      if d not in matched_indices[:, 0]]
 
     unmatched_tracks = [d for d in range(tracks.shape[0]) \
-      if not (d in matched_indices[:, 1])]
-    
+      if d not in matched_indices[:, 1]]
+
     matches = matched_indices
 
     ret = []
     for m in matches:
       track = results[m[0]]
-      track['tracking_id'] = self.tracks[m[1]]['tracking_id']      
+      track['tracking_id'] = self.tracks[m[1]]['tracking_id']
       track['age'] = 1
       track['active'] = self.tracks[m[1]]['active'] + 1
       ret.append(track)
@@ -117,8 +114,8 @@ class PubTracker(object):
         track['active'] =  1
         ret.append(track)
 
-    # still store unmatched tracks if its age doesn't exceed max_age, however, we shouldn't output 
-    # the object in current frame 
+    # still store unmatched tracks if its age doesn't exceed max_age, however, we shouldn't output
+    # the object in current frame
     for i in unmatched_tracks:
       track = self.tracks[i]
       if track['age'] < self.max_age:
@@ -128,8 +125,8 @@ class PubTracker(object):
 
         # movement in the last second
         if 'tracking' in track:
-            offset = track['tracking'] * -1 # move forward 
-            track['ct'] = ct + offset 
+            offset = track['tracking'] * -1 # move forward
+            track['ct'] = ct + offset
         ret.append(track)
 
     self.tracks = ret

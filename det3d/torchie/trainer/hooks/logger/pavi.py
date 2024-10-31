@@ -1,4 +1,3 @@
-from __future__ import print_function
 
 import logging
 import os
@@ -14,7 +13,7 @@ from ...utils import get_host_info, master_only
 from .base import LoggerHook
 
 
-class PaviClient(object):
+class PaviClient:
     def __init__(self, url, username=None, password=None, instance_id=None):
         self.url = url
         self.username = self._get_env_var(username, "PAVI_USERNAME")
@@ -30,7 +29,7 @@ class PaviClient(object):
         var = os.getenv(env_var)
         if not var:
             raise ValueError(
-                '"{}" is neither specified nor defined as env variables'.format(env_var)
+                f'"{env_var}" is neither specified nor defined as env variables'
             )
         return var
 
@@ -43,7 +42,7 @@ class PaviClient(object):
     def connect(self, model_name, work_dir=None, info=dict(), timeout=5, logger=None):
         if logger is not None:
             self.logger = logger
-        self._print_log("connecting pavi service {}...".format(self.url))
+        self._print_log(f"connecting pavi service {self.url}...")
         post_data = dict(
             time=str(datetime.now()),
             username=self.username,
@@ -60,13 +59,13 @@ class PaviClient(object):
             response = requests.post(self.url, json=post_data, timeout=timeout)
         except Exception as ex:
             self._print_log(
-                "fail to connect to pavi service: {}".format(ex), level=logging.ERROR
+                f"fail to connect to pavi service: {ex}", level=logging.ERROR
             )
         else:
             if response.status_code == 200:
                 self.instance_id = response.text
                 self._print_log(
-                    "pavi service connected, instance_id: {}".format(self.instance_id)
+                    f"pavi service connected, instance_id: {self.instance_id}"
                 )
                 self.log_queue = Queue()
                 self.log_thread = Thread(target=self.post_worker_fn)
@@ -76,7 +75,7 @@ class PaviClient(object):
             else:
                 self._print_log(
                     "fail to connect to pavi service, status code: "
-                    "{}, err message: {}".format(response.status_code, response.reason),
+                    f"{response.status_code}, err message: {response.reason}",
                     level=logging.ERROR,
                 )
         return False
@@ -89,7 +88,7 @@ class PaviClient(object):
                 time.sleep(1)
             except Exception as ex:
                 self._print_log(
-                    "fail to get logs from queue: {}".format(ex), level=logging.ERROR
+                    f"fail to get logs from queue: {ex}", level=logging.ERROR
                 )
             else:
                 retry = 0
@@ -101,7 +100,7 @@ class PaviClient(object):
                     except Exception as ex:
                         retry += 1
                         self._print_log(
-                            "error when posting logs to pavi: {}".format(ex),
+                            f"error when posting logs to pavi: {ex}",
                             level=logging.ERROR,
                         )
                     else:
@@ -110,9 +109,7 @@ class PaviClient(object):
                             break
                         else:
                             self._print_log(
-                                "unexpected status code: {}, err msg: {}".format(
-                                    status_code, response.reason
-                                ),
+                                f"unexpected status code: {status_code}, err msg: {response.reason}",
                                 level=logging.ERROR,
                             )
                             retry += 1
@@ -159,7 +156,7 @@ class PaviLoggerHook(LoggerHook):
     def connect(self, runner, timeout=5):
         cfg_info = dict()
         if self.config_file is not None:
-            with open(self.config_file, "r") as f:
+            with open(self.config_file) as f:
                 config_text = f.read()
             cfg_info.update(session_file=self.config_file, session_text=config_text)
         return self.pavi.connect(

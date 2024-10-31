@@ -4,19 +4,15 @@
     # Licensed under MIT License
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import zlib
-import numpy as np
 
+import numpy as np
 import tensorflow.compat.v2 as tf
 from pyquaternion import Quaternion
-
 from waymo_open_dataset import dataset_pb2
-from waymo_open_dataset.utils import range_image_utils
-from waymo_open_dataset.utils import transform_utils
+from waymo_open_dataset.utils import range_image_utils, transform_utils
+
 tf.enable_v2_behavior()
 
 def decode_frame(frame, frame_id):
@@ -26,11 +22,7 @@ def decode_frame(frame, frame_id):
                           frame.context.laser_calibrations,
                           frame.pose)
 
-  frame_name = '{scene_name}_{location}_{time_of_day}_{timestamp}'.format(
-      scene_name=frame.context.name,
-      location=frame.context.stats.location,
-      time_of_day=frame.context.stats.time_of_day,
-      timestamp=frame.timestamp_micros)
+  frame_name = f'{frame.context.name}_{frame.context.stats.location}_{frame.context.stats.time_of_day}_{frame.timestamp_micros}'
 
   example_data = {
       'scene_name': frame.context.name,
@@ -48,24 +40,20 @@ def decode_annos(frame, frame_id):
   veh_to_global = np.array(frame.pose.transform)
 
   ref_pose = np.reshape(np.array(frame.pose.transform), [4, 4])
-  global_from_ref_rotation = ref_pose[:3, :3] 
+  global_from_ref_rotation = ref_pose[:3, :3]
   objects = extract_objects(frame.laser_labels, global_from_ref_rotation)
 
-  frame_name = '{scene_name}_{location}_{time_of_day}_{timestamp}'.format(
-      scene_name=frame.context.name,
-      location=frame.context.stats.location,
-      time_of_day=frame.context.stats.time_of_day,
-      timestamp=frame.timestamp_micros)
+  frame_name = f'{frame.context.name}_{frame.context.stats.location}_{frame.context.stats.time_of_day}_{frame.timestamp_micros}'
 
   annos = {
     'scene_name': frame.context.name,
     'frame_name': frame_name,
     'frame_id': frame_id,
-    'veh_to_global': veh_to_global,  
+    'veh_to_global': veh_to_global,
     'objects': objects,
   }
 
-  return annos 
+  return annos
 
 
 def extract_points_from_range_image(laser, calibration, frame_pose):
@@ -156,7 +144,7 @@ def extract_points(lasers, laser_calibrations, frame_pose):
 def global_vel_to_ref(vel, global_from_ref_rotation):
   # inverse means ref_from_global, rotation_matrix for normalization
   vel = [vel[0], vel[1], 0]
-  ref = np.dot(Quaternion(matrix=global_from_ref_rotation).inverse.rotation_matrix, vel) 
+  ref = np.dot(Quaternion(matrix=global_from_ref_rotation).inverse.rotation_matrix, vel)
   ref = [ref[0], ref[1], 0.0]
 
   return ref
@@ -191,7 +179,7 @@ def extract_objects(laser_labels, global_from_ref_rotation):
         'name': label.id,
         'label': category_label,
         'box': np.array([box.center_x, box.center_y, box.center_z,
-                         box.length, box.width, box.height, ref_velocity[0], 
+                         box.length, box.width, box.height, ref_velocity[0],
                          ref_velocity[1], box.heading], dtype=np.float32),
         'num_points':
             num_lidar_points_in_box,
