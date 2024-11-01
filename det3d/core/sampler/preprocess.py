@@ -8,6 +8,7 @@ from det3d.core.bbox import box_np_ops
 from det3d.core.bbox.geometry import (
     points_in_convex_polygon_3d_jit,
     points_in_convex_polygon_jit,
+    points_in_convex_polygon,
 )
 
 
@@ -113,7 +114,9 @@ def filter_gt_box_outside_range(gt_boxes, limit_range):
     bounding_box = box_np_ops.minmax_to_corner_2d(
         np.asarray(limit_range)[np.newaxis, ...]
     )
-    ret = points_in_convex_polygon_jit(gt_boxes_bv.reshape(-1, 2), bounding_box)
+    # JIT version disabled cause not working with newer numba version
+    # ret = points_in_convex_polygon_jit(gt_boxes_bv.reshape(-1, 2), bounding_box)
+    ret = points_in_convex_polygon(gt_boxes_bv.reshape(-1, 2), bounding_box)
     return np.any(ret.reshape(-1, 4), axis=1)
 
 
@@ -128,7 +131,9 @@ def filter_gt_box_outside_range_by_center(gt_boxes, limit_range):
     bounding_box = box_np_ops.minmax_to_corner_2d(
         np.asarray(limit_range)[np.newaxis, ...]
     )
-    ret = points_in_convex_polygon_jit(gt_box_centers, bounding_box)
+    # JIT version disabled cause not working with newer numba version
+    # ret = points_in_convex_polygon_jit(gt_box_centers, bounding_box)
+    ret = points_in_convex_polygon(gt_box_centers, bounding_box)
     return ret.reshape(-1)
 
 
@@ -468,7 +473,7 @@ def group_transform_(loc_noise, rot_noise, locs, rots, group_center, valid_mask)
         if valid_mask[i]:
             x = locs[i, 0] - group_center[i, 0]
             y = locs[i, 1] - group_center[i, 1]
-            r = np.sqrt(x ** 2 + y ** 2)
+            r = np.sqrt(x**2 + y**2)
             # calculate rots related to group center
             rot_center = np.arctan2(x, y)
             for j in range(num_try):
@@ -496,7 +501,7 @@ def group_transform_v2_(
         if valid_mask[i]:
             x = locs[i, 0] - group_center[i, 0]
             y = locs[i, 1] - group_center[i, 1]
-            r = np.sqrt(x ** 2 + y ** 2)
+            r = np.sqrt(x**2 + y**2)
             # calculate rots related to group center
             rot_center = np.arctan2(x, y)
             for j in range(num_try):
@@ -794,6 +799,7 @@ def random_flip(gt_boxes, points, probability=0.5):
             gt_boxes[:, 7] = -gt_boxes[:, 7]
     return gt_boxes, points
 
+
 def random_flip_both(gt_boxes, points, probability=0.5, flip_coor=None):
     # x flip
     enable = np.random.choice(
@@ -818,7 +824,7 @@ def random_flip_both(gt_boxes, points, probability=0.5, flip_coor=None):
             gt_boxes[:, 0] = flip_coor * 2 - gt_boxes[:, 0]
             points[:, 0] = flip_coor * 2 - points[:, 0]
 
-        gt_boxes[:, -1] = -gt_boxes[:, -1] + 2*np.pi  # TODO: CHECK THIS
+        gt_boxes[:, -1] = -gt_boxes[:, -1] + 2 * np.pi  # TODO: CHECK THIS
 
         if gt_boxes.shape[1] > 7:  # y axis: x, y, z, w, h, l, vx, vy, r
             gt_boxes[:, 6] = -gt_boxes[:, 6]

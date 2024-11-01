@@ -8,25 +8,29 @@ from det3d.datasets.waymo import waymo_common as waymo_ds
 
 
 def nuscenes_data_prep(root_path, version, nsweeps=10, filter_zero=True, virtual=False):
-    nu_ds.create_nuscenes_infos(root_path, version=version, nsweeps=nsweeps, filter_zero=filter_zero)
-    if version == 'v1.0-trainval':
+    nu_ds.create_nuscenes_infos(
+        root_path, version=version, nsweeps=nsweeps, filter_zero=filter_zero
+    )
+    if version in ["v1.0-trainval", "v1.0-mini"]:
         create_groundtruth_database(
             "NUSC",
             root_path,
-            Path(root_path) / f"infos_train_{nsweeps:02d}sweeps_withvelo_filter_{filter_zero}.pkl",
+            Path(root_path)
+            / f"infos_train_{nsweeps:02d}sweeps_withvelo_filter_{filter_zero}.pkl",
             nsweeps=nsweeps,
-            virtual=virtual
+            virtual=virtual,
         )
+
 
 def waymo_data_prep(root_path, split, nsweeps=1):
     waymo_ds.create_waymo_infos(root_path, split=split, nsweeps=nsweeps)
-    if split == 'train':
+    if split == "train":
         create_groundtruth_database(
             "WAYMO",
             root_path,
             Path(root_path) / f"infos_train_{nsweeps:02d}sweeps_filter_zero_gt.pkl",
-            used_classes=['VEHICLE', 'CYCLIST', 'PEDESTRIAN'],
-            nsweeps=nsweeps
+            used_classes=["VEHICLE", "CYCLIST", "PEDESTRIAN"],
+            nsweeps=nsweeps,
         )
 
 

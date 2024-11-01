@@ -8,9 +8,11 @@ venv/
 *.idea/
 *.so
 *.yaml
-*.sh 
+*.sh
 *.pth
 *.pkl
 *.zip
 *.bin
 .vscode/
+work_dirs
+data
